@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1F7A63;
+  --color-secondary: #4A2E2A;
+  --color-background: #F5E9DC;
+  --color-accent: #A3D9A5;
+  --color-premium: #C9A66B;
+  --font-primary: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-secondary: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-card: 12px;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-secondary font-primary antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 font-medium text-white transition hover:opacity-90 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl bg-secondary px-6 py-3 font-medium text-white transition hover:opacity-90 active:scale-[0.98];
+  }
+  .card {
+    @apply rounded-[var(--radius-card)] bg-white shadow-md;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-primary/20 bg-white px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+}

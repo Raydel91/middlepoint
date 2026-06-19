@@ -1,0 +1,56 @@
+{
+  "brand": {
+    "name": "MiddlePoint",
+    "slogan": "Tu punto medio"
+  },
+  "colors": {
+    "primary": "#1F7A63",
+    "secondary": "#4A2E2A",
+    "background": "#F5E9DC",
+    "accent": "#A3D9A5",
+    "premium": "#C9A66B",
+    "white": "#FFFFFF",
+    "black": "#000000"
+  },
+  "typography": {
+    "fontPrimary": "Inter, sans-serif",
+    "fontSecondary": "Poppins, sans-serif",
+    "fontWeights": [300, 400, 500, 600, 700]
+  },
+  "logo": {
+    "type": "combination_mark",
+    "symbol": {
+      "shape": "circle_split",
+      "left": {
+        "color": "#1F7A63",
+        "icon": "leaf"
+      },
+      "right": {
+        "color": "#4A2E2A",
+        "icon": "dessert_swirl"
+      }
+    },
+    "text": {
+      "value": "MIDDLE•POINT",
+      "color": "#4A2E2A",
+      "dotColor": "#1F7A63"
+    }
+  },
+  "ui": {
+    "buttons": {
+      "primary": {
+        "bg": "#1F7A63",
+        "text": "#FFFFFF"
+      },
+      "secondary": {
+        "bg": "#4A2E2A",
+        "text": "#FFFFFF"
+      }
+    },
+    "cards": {
+      "background": "#FFFFFF",
+      "shadow": "soft",
+      "borderRadius": "12px"
+    }
+  }
+}
