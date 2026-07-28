@@ -17,6 +17,18 @@ export type FaqItem = {
   answer: string;
 };
 
+export type BankAccount = {
+  holderName: string;
+  bankName: string;
+  accountNumber: string;
+  accountType: string;
+  accountTypeLabel: string;
+  currency: string;
+  currencyLabel: string;
+  rnc: string;
+  documentId: string;
+};
+
 export type ResolvedStoreContent = {
   home: {
     heroTitle: string;
@@ -58,16 +70,11 @@ export type ResolvedStoreContent = {
     whatsappDisplay: string;
     whatsappHref: string;
     address: string;
+    orderConfirmationWhatsapp: string;
   };
   instagram: Array<{ label: string; url: string }>;
   payment: {
-    holderName: string;
-    bankName: string;
-    accountNumber: string;
-    accountType: string;
-    accountTypeLabel: string;
-    rnc: string;
-    documentId: string;
+    accounts: BankAccount[];
     instructions: string;
   };
 };
@@ -196,6 +203,7 @@ const DEFAULTS = {
     phone_digits: '18091234567',
     whatsapp_digits: '18299876543',
     whatsapp_display: FOOTER_CONFIG.contact.whatsapp,
+    order_confirmation_whatsapp: '18299876543',
     address: FOOTER_CONFIG.contact.address,
     whatsapp_message: {
       es: 'Hola, me gustaría obtener más información sobre Tu Punto Medio',
@@ -208,12 +216,17 @@ const DEFAULTS = {
     fit_meals: FOOTER_CONFIG.instagram.fitMeals,
   },
   payment: {
-    holder_name: 'Middle Point SRL',
-    bank_name: 'Banco Popular Dominicano',
-    account_number: '',
-    account_type: 'corriente',
-    rnc: '',
-    document_id: '',
+    accounts: [
+      {
+        holder_name: 'Middle Point SRL',
+        bank_name: 'Banco Popular Dominicano',
+        account_number: '',
+        account_type: 'corriente',
+        currency: 'DOP',
+        rnc: '',
+        document_id: '',
+      },
+    ],
     transfer_instructions: {
       es: 'Envía el comprobante por WhatsApp indicando tu número de pedido.',
       en: 'Send the payment receipt via WhatsApp including your order number.',
@@ -225,6 +238,58 @@ const ACCOUNT_TYPE_LABELS: Record<string, I18nGroup> = {
   corriente: { es: 'Cuenta corriente', en: 'Checking account' },
   ahorros: { es: 'Cuenta de ahorros', en: 'Savings account' },
 };
+
+const CURRENCY_LABELS: Record<string, I18nGroup> = {
+  DOP: { es: 'Peso dominicano (DOP)', en: 'Dominican peso (DOP)' },
+  USD: { es: 'Dólar estadounidense (USD)', en: 'US dollar (USD)' },
+};
+
+type RawAccount = Record<string, unknown>;
+
+function resolveBankAccount(acc: RawAccount, locale: Locale): BankAccount {
+  const accountType = (acc.account_type as string) || 'corriente';
+  const currency = (acc.currency as string) || 'DOP';
+  return {
+    holderName: (acc.holder_name as string) || '',
+    bankName: (acc.bank_name as string) || '',
+    accountNumber: (acc.account_number as string) || '',
+    accountType,
+    accountTypeLabel: pickI18n(
+      ACCOUNT_TYPE_LABELS[accountType] ?? ACCOUNT_TYPE_LABELS.corriente,
+      locale,
+      ACCOUNT_TYPE_LABELS.corriente,
+    ),
+    currency,
+    currencyLabel: pickI18n(
+      CURRENCY_LABELS[currency] ?? CURRENCY_LABELS.DOP,
+      locale,
+      CURRENCY_LABELS.DOP,
+    ),
+    rnc: (acc.rnc as string) || '',
+    documentId: (acc.document_id as string) || '',
+  };
+}
+
+function resolvePaymentAccounts(
+  paymentDoc: Record<string, unknown>,
+  locale: Locale,
+): BankAccount[] {
+  const rawAccounts = Array.isArray(paymentDoc.accounts)
+    ? (paymentDoc.accounts as RawAccount[])
+    : null;
+
+  let source: RawAccount[];
+  if (rawAccounts && rawAccounts.length > 0) {
+    source = rawAccounts;
+  } else if (paymentDoc.account_number || paymentDoc.holder_name) {
+    // Retrocompat: estructura antigua de una sola cuenta plana.
+    source = [paymentDoc];
+  } else {
+    source = DEFAULTS.payment.accounts as unknown as RawAccount[];
+  }
+
+  return source.map((acc) => resolveBankAccount(acc, locale));
+}
 
 function pickI18n(field: I18nGroup | undefined | null, locale: Locale, fallback: I18nGroup): string {
   return getI18nValue(field ?? fallback, locale) || getI18nValue(fallback, locale);
@@ -255,7 +320,10 @@ function resolveContentPage(
 const loadStoreContentDoc = cache(async () => {
   try {
     const payload = await getPayloadClient();
-    return (await payload.findGlobal({ slug: 'store-content' })) as Record<string, unknown>;
+    return (await payload.findGlobal({ slug: 'store-content' })) as unknown as Record<
+      string,
+      unknown
+    >;
   } catch {
     return null;
   }
@@ -268,7 +336,7 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
   const footer = (doc?.footer ?? {}) as Record<string, string | I18nGroup | undefined>;
   const nav = (doc?.nav ?? {}) as Record<string, I18nGroup | undefined>;
   const contact = (doc?.contact ?? {}) as Record<string, string | I18nGroup | undefined>;
-  const payment = (doc?.payment ?? {}) as Record<string, string | I18nGroup | undefined>;
+  const payment = (doc?.payment ?? {}) as Record<string, unknown>;
   const instagram = (doc?.instagram ?? {}) as Record<string, { label?: string; url?: string }>;
 
   const whatsappDigits =
@@ -279,8 +347,7 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
     DEFAULTS.contact.whatsapp_message,
   );
   const phoneDigits = (contact.phone_digits as string) || DEFAULTS.contact.phone_digits;
-  const accountType =
-    (payment.account_type as string) || DEFAULTS.payment.account_type;
+  const paymentAccounts = resolvePaymentAccounts(payment, locale);
 
   return {
     home: {
@@ -331,6 +398,9 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
       whatsappDisplay: (contact.whatsapp_display as string) || DEFAULTS.contact.whatsapp_display,
       whatsappHref: buildWhatsappHref(whatsappDigits, whatsappMessage),
       address: pickI18n(contact.address as I18nGroup, locale, DEFAULTS.contact.address),
+      orderConfirmationWhatsapp:
+        (contact.order_confirmation_whatsapp as string) ||
+        DEFAULTS.contact.order_confirmation_whatsapp,
     },
     instagram: [
       {
@@ -347,17 +417,7 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
       },
     ],
     payment: {
-      holderName: (payment.holder_name as string) || DEFAULTS.payment.holder_name,
-      bankName: (payment.bank_name as string) || DEFAULTS.payment.bank_name,
-      accountNumber: (payment.account_number as string) || DEFAULTS.payment.account_number,
-      accountType,
-      accountTypeLabel: pickI18n(
-        ACCOUNT_TYPE_LABELS[accountType] ?? ACCOUNT_TYPE_LABELS.corriente,
-        locale,
-        ACCOUNT_TYPE_LABELS.corriente,
-      ),
-      rnc: (payment.rnc as string) || DEFAULTS.payment.rnc,
-      documentId: (payment.document_id as string) || DEFAULTS.payment.document_id,
+      accounts: paymentAccounts,
       instructions: pickI18n(
         payment.transfer_instructions as I18nGroup,
         locale,

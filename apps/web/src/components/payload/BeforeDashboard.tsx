@@ -9,19 +9,19 @@ type KpiCard = {
   highlight?: boolean;
 };
 
-type KpiKey = keyof typeof KPI_BUILDERS;
-
-const KPI_BUILDERS: Record<KpiKey, (kpis: AnalyticsKPIs) => string> = {
-  totalSales: (k) => formatCurrency(k.totalSales, 'DOP'),
-  totalOrders: (k) => String(k.totalOrders),
-  avgTicket: (k) => formatCurrency(k.avgTicket, 'DOP'),
-  conversionRate: (k) => `${(k.conversionRate * 100).toFixed(1)}%`,
-  ltv: (k) => formatCurrency(k.ltv, 'DOP'),
-  purchaseFrequency: (k) => k.purchaseFrequency.toFixed(2),
-  totalClients: (k) => String(k.totalClients),
-  newClients: (k) => String(k.newClients),
-  cac: (k) => (k.cac != null ? formatCurrency(k.cac, 'DOP') : 'N/A'),
+const KPI_BUILDERS = {
+  totalSales: (k: AnalyticsKPIs) => formatCurrency(k.totalSales, 'DOP'),
+  totalOrders: (k: AnalyticsKPIs) => String(k.totalOrders),
+  avgTicket: (k: AnalyticsKPIs) => formatCurrency(k.avgTicket, 'DOP'),
+  conversionRate: (k: AnalyticsKPIs) => `${(k.conversionRate * 100).toFixed(1)}%`,
+  ltv: (k: AnalyticsKPIs) => formatCurrency(k.ltv, 'DOP'),
+  purchaseFrequency: (k: AnalyticsKPIs) => k.purchaseFrequency.toFixed(2),
+  totalClients: (k: AnalyticsKPIs) => String(k.totalClients),
+  newClients: (k: AnalyticsKPIs) => String(k.newClients),
+  cac: (k: AnalyticsKPIs) => (k.cac != null ? formatCurrency(k.cac, 'DOP') : 'N/A'),
 };
+
+type KpiKey = keyof typeof KPI_BUILDERS;
 
 const KPI_DEFINITIONS: Array<{
   key: KpiKey;
@@ -112,7 +112,8 @@ export default async function BeforeDashboard({ payload, user }: ServerProps) {
           >
             Ver tienda →
           </a>
-          {user?.role && user.role !== 'cliente' ? (
+          {user?.role &&
+          (user.role === 'super_admin' || user.role === 'marketing') ? (
             <a href="/admin/globals/store-content" className="mp-dashboard-welcome__link">
               Mensajes de la tienda →
             </a>

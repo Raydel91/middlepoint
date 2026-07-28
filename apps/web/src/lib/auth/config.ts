@@ -47,6 +47,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        if (!user) return null;
+
         const accessToken = await createAccessToken({
           sub: String(user.id),
           role: user.role,
@@ -80,13 +82,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/es/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.nombre = user.nombre;
         token.apellido = user.apellido;
+        token.email = user.email;
         token.accessToken = (user as { accessToken?: string }).accessToken;
+      }
+      if (trigger === 'update' && session) {
+        const data = session as {
+          nombre?: string;
+          apellido?: string;
+          email?: string;
+        };
+        if (data.nombre) token.nombre = data.nombre;
+        if (data.apellido) token.apellido = data.apellido;
+        if (data.email) token.email = data.email;
       }
       return token;
     },
@@ -96,6 +109,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as UserRole;
         session.user.nombre = token.nombre as string;
         session.user.apellido = token.apellido as string;
+        if (token.email) session.user.email = token.email as string;
         session.user.accessToken = token.accessToken as string;
       }
       return session;

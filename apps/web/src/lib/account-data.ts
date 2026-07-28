@@ -1,10 +1,7 @@
 import type { OrderStatus } from '@middlepoint/shared';
 import type { Payload } from 'payload';
 
-async function safeFind<T>(
-  fn: () => Promise<T>,
-  fallback: T,
-): Promise<T> {
+async function safeFind<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await fn();
   } catch {
@@ -47,6 +44,8 @@ export async function fetchAccountOrders(
         payment_method: string;
         currency?: string | null;
         createdAt: string;
+        scheduled_date?: string | null;
+        scheduled_time?: string | null;
       }>;
     }
 

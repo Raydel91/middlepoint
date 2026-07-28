@@ -1,5 +1,9 @@
-import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import type { CollectionConfig, Where } from 'payload';
+import {
+  canAccessAdminNav,
+  isAdminNavHidden,
+  isAdminRole,
+} from '@middlepoint/shared';
 
 export const Reviews: CollectionConfig = {
   slug: 'reviews',
@@ -9,24 +13,26 @@ export const Reviews: CollectionConfig = {
     useAsTitle: 'author_name',
     defaultColumns: ['author_name', 'rating', 'approved', 'createdAt'],
     description: 'Reseñas de clientes. Aprueba las que quieras mostrar en el inicio.',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'reviews'),
   },
   access: {
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'reviews'),
     read: ({ req: { user } }) => {
-      if (!user) return { approved: { equals: true } };
-      if (isStaffRole(user.role)) return true;
+      if (!user) return { approved: { equals: true } } as Where;
+      if (canAccessAdminNav(user.role, 'reviews')) return true;
       return {
         or: [{ approved: { equals: true } }, { user: { equals: user.id } }],
-      };
+      } as Where;
     },
     create: ({ req: { user } }) => !!user,
     update: ({ req: { user } }) => {
       if (!user) return false;
-      if (isStaffRole(user.role)) return true;
+      if (canAccessAdminNav(user.role, 'reviews')) return true;
       return { user: { equals: user.id } };
     },
     delete: ({ req: { user } }) => {
       if (!user) return false;
-      if (user.role === 'super_admin') return true;
+      if (isAdminRole(user.role)) return true;
       return { user: { equals: user.id } };
     },
   },
@@ -77,7 +83,7 @@ export const Reviews: CollectionConfig = {
         if (operation === 'create' && data.approved === undefined) {
           data.approved = false;
         }
-        if (operation === 'update' && req.user && !isStaffRole(req.user.role)) {
+        if (operation === 'update' && req.user && !canAccessAdminNav(req.user.role, 'reviews')) {
           data.approved = false;
           delete data.user;
           delete data.author_name;

@@ -42,6 +42,7 @@ export default buildConfig({
         Icon: '@/components/payload/Icon',
       },
       beforeDashboard: ['@/components/payload/BeforeDashboard'],
+      afterNavLinks: ['@/components/payload/AdminLogoutButton'],
     },
   },
   collections: [

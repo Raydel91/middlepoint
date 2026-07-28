@@ -6,7 +6,13 @@ import { getPayload } from 'payload';
 import config from '../payload.config';
 import { STORE_CONTENT_SEED } from '../lib/store-content';
 
-const payload = await getPayload({ config });
-await payload.updateGlobal({ slug: 'store-content', data: STORE_CONTENT_SEED });
-console.log('Contenido del sitio actualizado.');
-await payload.db.destroy();
+try {
+  const payload = await getPayload({ config });
+  await payload.updateGlobal({ slug: 'store-content', data: STORE_CONTENT_SEED });
+  console.log('Contenido del sitio actualizado.');
+  await payload.db.destroy();
+  process.exit(0);
+} catch (error) {
+  console.error('Error al cargar el contenido del sitio:', error);
+  process.exit(1);
+}

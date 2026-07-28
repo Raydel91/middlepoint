@@ -134,6 +134,8 @@ export function DeliveryProfileForm({ initial, labels }: Props) {
           <input
             value={secondaryPhone}
             onChange={(e) => setSecondaryPhone(e.target.value)}
+            type="tel"
+            inputMode="tel"
             placeholder={labels.phone}
             className="input-field"
           />

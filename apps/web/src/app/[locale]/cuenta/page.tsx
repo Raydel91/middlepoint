@@ -5,10 +5,13 @@ import { getStoreContent } from '@/lib/store-content';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { MyReviewCard } from '@/components/reviews/MyReviewCard';
 import { ProfilePhotoUpload } from '@/components/account/ProfilePhotoUpload';
+import { AccountProfileForm } from '@/components/account/AccountProfileForm';
+import { ChangePasswordForm } from '@/components/account/ChangePasswordForm';
 import { DeliveryProfileForm } from '@/components/account/DeliveryProfileForm';
+import { AccountLogoutButton } from '@/components/account/AccountLogoutButton';
 import { fetchAccountReviews } from '@/lib/account-data';
 import { getMediaUrl } from '@/lib/media';
-import { parseUserDeliveryProfile } from '@/lib/user-delivery-profile';
+import { parseUserAccountProfile, parseUserDeliveryProfile } from '@/lib/user-delivery-profile';
 import { requireCustomerAccount } from '@/lib/account-auth';
 import type { Media } from '@/payload-types';
 import { Link } from '@/i18n/routing';
@@ -25,6 +28,7 @@ export default async function AccountProfilePage({ params }: Props) {
   const userId = Number(session.user.id);
   let avatarUrl: string | undefined;
   let myReviews: Awaited<ReturnType<typeof fetchAccountReviews>> = [];
+  let accountProfile = parseUserAccountProfile({});
   let deliveryProfile = parseUserDeliveryProfile({});
 
   if (Number.isFinite(userId)) {
@@ -35,10 +39,11 @@ export default async function AccountProfilePage({ params }: Props) {
     ]);
     avatarUrl = getMediaUrl(userDoc.avatar as number | Media | null | undefined);
     myReviews = reviews;
+    accountProfile = parseUserAccountProfile(userDoc);
     deliveryProfile = parseUserDeliveryProfile(userDoc);
   }
 
-  const displayName = `${session.user.nombre} ${session.user.apellido}`.trim();
+  const displayName = `${accountProfile.nombre} ${accountProfile.apellido}`.trim();
 
   return (
     <div className="space-y-8">
@@ -55,11 +60,39 @@ export default async function AccountProfilePage({ params }: Props) {
         />
         <div className="mt-6 border-t border-primary/10 pt-6">
           <h1 className="font-secondary text-2xl font-bold text-secondary">{t('title')}</h1>
-          <p className="mt-2 text-secondary/70">
-            {displayName} · {session.user.email}
-          </p>
         </div>
       </div>
+
+      <AccountProfileForm
+        initial={accountProfile}
+        labels={{
+          title: t('personalDataTitle'),
+          firstName: t('firstName'),
+          lastName: t('lastName'),
+          email: t('email'),
+          phone: t('phone'),
+          memberSince: t('memberSince'),
+          save: t('personalDataSave'),
+          success: t('personalDataSuccess'),
+          error: t('personalDataError'),
+          invalidPhone: t('personalDataInvalidPhone'),
+          emailInUse: t('emailInUse'),
+        }}
+      />
+
+      <ChangePasswordForm
+        labels={{
+          title: t('passwordTitle'),
+          currentPassword: t('currentPassword'),
+          newPassword: t('newPassword'),
+          confirmPassword: t('confirmPassword'),
+          save: t('passwordSave'),
+          success: t('passwordSuccess'),
+          error: t('passwordError'),
+          mismatch: t('passwordMismatch'),
+          invalidCurrent: t('passwordInvalidCurrent'),
+        }}
+      />
 
       <DeliveryProfileForm
         initial={deliveryProfile}
@@ -126,6 +159,14 @@ export default async function AccountProfilePage({ params }: Props) {
           </div>
         </section>
       )}
+
+      <div className="card flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-secondary text-lg font-semibold text-secondary">{t('logoutTitle')}</h2>
+          <p className="mt-1 text-sm text-secondary/60">{t('logoutHint')}</p>
+        </div>
+        <AccountLogoutButton label={t('logout')} />
+      </div>
 
       <p className="text-sm text-secondary/60">
         <Link href="/" className="text-primary hover:underline">

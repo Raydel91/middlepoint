@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { MediaImage } from '@/components/media/MediaImage';
 import type { ResolvedMedia } from '@/lib/media';
 import { isVideoMedia } from '@/lib/media';
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function ProductGallery({ items, alt }: Props) {
+  const t = useTranslations('product');
   const [active, setActive] = useState(0);
 
   if (items.length === 0) {
@@ -46,7 +48,7 @@ export function ProductGallery({ items, alt }: Props) {
           <MediaImage
             src={current.url}
             mimeType={current.mimeType}
-            alt={`${alt} — ${active + 1} de ${items.length}`}
+            alt={t('imageAlt', { alt, current: active + 1, total: items.length })}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"
@@ -60,7 +62,7 @@ export function ProductGallery({ items, alt }: Props) {
               type="button"
               onClick={() => goTo(active - 1)}
               className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition hover:bg-white"
-              aria-label="Imagen anterior"
+              aria-label={t('previousImage')}
             >
               <ChevronLeft size={20} className="text-secondary" />
             </button>
@@ -68,7 +70,7 @@ export function ProductGallery({ items, alt }: Props) {
               type="button"
               onClick={() => goTo(active + 1)}
               className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition hover:bg-white"
-              aria-label="Imagen siguiente"
+              aria-label={t('nextImage')}
             >
               <ChevronRight size={20} className="text-secondary" />
             </button>

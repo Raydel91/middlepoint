@@ -46,7 +46,10 @@ export async function POST(request: Request) {
       collection: 'reviews',
       data: {
         user: userId,
-        author_name: `${session.user.nombre ?? ''} ${session.user.apellido ?? ''}`.trim() || session.user.email,
+        author_name:
+          `${session.user.nombre ?? ''} ${session.user.apellido ?? ''}`.trim() ||
+          session.user.email ||
+          '',
         rating: parsed.data.rating,
         comment: parsed.data.comment,
         approved: false,

@@ -1,11 +1,18 @@
 import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import {
+  canAccessAdminNav,
+  isAdminNavHidden,
+  isAdminRole,
+  isMarketingRole,
+  isStaffRole,
+} from '@middlepoint/shared';
 
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Archivo', plural: 'Medios' },
   admin: {
     group: 'Catálogo',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'media'),
   },
   upload: {
     staticDir: 'media',
@@ -13,10 +20,14 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'image/svg+xml', 'video/*', 'application/xml'],
   },
   access: {
+    // Marketing usa medios en «Mensajes de la tienda» aunque no esté en su menú.
+    admin: ({ req: { user } }) =>
+      canAccessAdminNav(user?.role, 'media') || isMarketingRole(user?.role),
     read: () => true,
-    create: ({ req: { user } }) => isStaffRole(user?.role),
-    update: ({ req: { user } }) => isStaffRole(user?.role),
-    delete: ({ req: { user } }) => user?.role === 'super_admin',
+    create: ({ req: { user } }) => isStaffRole(user?.role) || isMarketingRole(user?.role),
+    update: ({ req: { user } }) =>
+      canAccessAdminNav(user?.role, 'media') || isMarketingRole(user?.role),
+    delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
     {

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import { canAccessAdminNav, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
 
 const i18nField = (name: string, required = true) => ({
   name,
@@ -17,12 +17,14 @@ export const Categories: CollectionConfig = {
     useAsTitle: 'slug',
     defaultColumns: ['slug', 'orden', 'updatedAt'],
     group: 'Catálogo',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'categories'),
   },
   access: {
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'categories'),
     read: () => true,
-    create: ({ req: { user } }) => isStaffRole(user?.role),
-    update: ({ req: { user } }) => isStaffRole(user?.role),
-    delete: ({ req: { user } }) => user?.role === 'super_admin',
+    create: ({ req: { user } }) => canAccessAdminNav(user?.role, 'categories'),
+    update: ({ req: { user } }) => canAccessAdminNav(user?.role, 'categories'),
+    delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
     i18nField('nombre'),

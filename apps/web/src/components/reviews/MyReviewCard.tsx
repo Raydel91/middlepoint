@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Pencil, Star, Trash2 } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 
 type Review = {
@@ -35,6 +36,7 @@ type Props = {
 };
 
 export function MyReviewCard({ review, labels }: Props) {
+  const locale = useLocale();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [rating, setRating] = useState(review.rating);
@@ -44,7 +46,7 @@ export function MyReviewCard({ review, labels }: Props) {
     null,
   );
 
-  const date = new Date(review.createdAt).toLocaleDateString('es-DO', {
+  const date = new Date(review.createdAt).toLocaleDateString(locale === 'es' ? 'es-DO' : 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

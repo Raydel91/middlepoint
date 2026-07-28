@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth/config';
-import { isStaffRole } from '@middlepoint/shared';
+import { canUseStoreAccount } from '@middlepoint/shared';
 
 export async function requireCustomerAccount(locale: string) {
   const session = await auth();
@@ -9,9 +9,17 @@ export async function requireCustomerAccount(locale: string) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/cuenta`);
   }
 
-  if (isStaffRole(session.user.role)) {
-    redirect(`/${locale}/dashboard`);
+  if (!canUseStoreAccount(session.user.role)) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/cuenta`);
   }
 
+  return session;
+}
+
+export async function getCustomerSession() {
+  const session = await auth();
+  if (!session?.user || !canUseStoreAccount(session.user.role)) {
+    return null;
+  }
   return session;
 }

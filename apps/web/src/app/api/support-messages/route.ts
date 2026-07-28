@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth/config';
 import { getPayloadClient } from '@/lib/payload';
 import { handleApiError, AppError } from '@/lib/logger';
+import { sendCustomerSupportMessage } from '@/lib/support-chat-service';
+import { getCustomerSession } from '@/lib/account-auth';
 
-const messageSchema = z.object({
-  subject: z.string().min(3).max(120),
-  message: z.string().min(10).max(2000),
+const sendSchema = z.object({
+  message: z.string().min(2).max(2000),
 });
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'cliente') {
+    const session = await getCustomerSession();
+    if (!session) {
       throw new AppError('No autorizado', 401, 'UNAUTHORIZED');
     }
 
@@ -21,8 +21,8 @@ export async function GET() {
     const result = await payload.find({
       collection: 'support-messages',
       where: { user: { equals: userId } },
-      sort: '-createdAt',
-      limit: 30,
+      sort: '-updatedAt',
+      limit: 10,
       overrideAccess: true,
     });
 
@@ -35,9 +35,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'cliente') {
-      throw new AppError('Debes iniciar sesión como cliente', 401, 'UNAUTHORIZED');
+    const session = await getCustomerSession();
+    if (!session) {
+      throw new AppError('Debes iniciar sesión', 401, 'UNAUTHORIZED');
     }
 
     const userId = Number(session.user.id);
@@ -46,23 +46,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const parsed = messageSchema.safeParse(body);
+    const parsed = sendSchema.safeParse(body);
     if (!parsed.success) {
       throw new AppError('Datos inválidos', 400, 'VALIDATION_ERROR');
     }
 
     const payload = await getPayloadClient();
-    const message = await payload.create({
-      collection: 'support-messages',
-      data: {
-        user: userId,
-        subject: parsed.data.subject,
-        message: parsed.data.message,
-        status: 'open',
-        read_by_customer: true,
-      },
-      overrideAccess: true,
-    });
+    const message = await sendCustomerSupportMessage(payload, userId, parsed.data.message);
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

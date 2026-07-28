@@ -16,11 +16,20 @@ export type UserDeliveryProfile = {
   contactSecondary?: SecondaryContact;
 };
 
+export type UserAccountProfile = {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  createdAt?: string;
+};
+
 type UserDoc = {
   nombre?: string;
   apellido?: string;
   email?: string;
   telefono?: string | null;
+  createdAt?: string;
   delivery_address?: {
     street?: string | null;
     city?: string | null;
@@ -33,6 +42,16 @@ type UserDoc = {
     email?: string | null;
   } | null;
 };
+
+export function parseUserAccountProfile(user: UserDoc): UserAccountProfile {
+  return {
+    nombre: user.nombre?.trim() || '',
+    apellido: user.apellido?.trim() || '',
+    email: user.email?.trim() || '',
+    telefono: user.telefono?.trim() || '',
+    createdAt: user.createdAt,
+  };
+}
 
 export function parseUserDeliveryProfile(user: UserDoc): UserDeliveryProfile {
   const address = user.delivery_address;
@@ -63,25 +82,31 @@ export function parseCheckoutProfilePayload(data: {
   contactSecondary?: SecondaryContact;
 }): {
   delivery_address: DeliveryAddress;
-  contact_secondary?: SecondaryContact | null;
+  contact_secondary?: SecondaryContact;
 } {
   const hasSecondary = Boolean(data.contactSecondary?.name?.trim() && data.contactSecondary?.phone?.trim());
 
-  return {
+  const payload: {
+    delivery_address: DeliveryAddress;
+    contact_secondary?: SecondaryContact;
+  } = {
     delivery_address: {
       street: data.address.street.trim(),
       city: data.address.city.trim(),
       province: data.address.province.trim(),
       reference: data.address.reference?.trim() || undefined,
     },
-    contact_secondary: hasSecondary
-      ? {
-          name: data.contactSecondary!.name.trim(),
-          phone: data.contactSecondary!.phone.trim(),
-          email: data.contactSecondary!.email?.trim() || undefined,
-        }
-      : null,
   };
+
+  if (hasSecondary) {
+    payload.contact_secondary = {
+      name: data.contactSecondary!.name.trim(),
+      phone: data.contactSecondary!.phone.trim(),
+      email: data.contactSecondary!.email?.trim() || undefined,
+    };
+  }
+
+  return payload;
 }
 
 export function getCheckoutDefaultsFromUser(user: UserDoc) {

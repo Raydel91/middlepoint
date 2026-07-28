@@ -1,5 +1,5 @@
 import type { GlobalConfig } from 'payload';
-import { isAdminRole } from '@middlepoint/shared';
+import { isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
@@ -7,9 +7,11 @@ export const Settings: GlobalConfig = {
   admin: {
     group: 'Sistema',
     description: 'Tasa de cambio, métricas internas y datos del sistema. Los textos de la tienda están en «Mensajes de la tienda» (Globals → Contenido).',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'settings'),
   },
   access: {
     read: () => true,
+    // Operador puede ver; solo super_admin edita.
     update: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [

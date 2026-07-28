@@ -62,6 +62,16 @@ const STATUS_COPY: Record<OrderStatus, { es: { title: string; body: string }; en
       body: 'Your order was delivered. Thank you for your purchase!',
     },
   },
+  returned: {
+    es: {
+      title: 'Pedido devuelto',
+      body: 'Tu pedido fue marcado como devuelto. Si tienes dudas, contáctanos.',
+    },
+    en: {
+      title: 'Order returned',
+      body: 'Your order was marked as returned. Contact us if you have questions.',
+    },
+  },
   cancelled: {
     es: {
       title: 'Pedido cancelado',
@@ -78,31 +88,50 @@ export function getOrderStatusCopy(status: OrderStatus, locale: 'es' | 'en' = 'e
   return STATUS_COPY[status][locale];
 }
 
+function formatOrderReference(orderId: string | number, locale: 'es' | 'en') {
+  return locale === 'es' ? `(Pedido #${orderId})` : `(Order #${orderId})`;
+}
+
 export async function notifyOrderStatusChange(
   payload: Payload,
   {
     userId,
     orderId,
     status,
+    locale = 'es',
+    supportMessageId,
   }: {
     userId: string | number;
     orderId: string | number;
     status: OrderStatus;
+    locale?: 'es' | 'en';
+    cancellationReason?: string | null;
+    supportMessageId?: string | number | null;
   },
 ) {
   const numericUserId = Number(userId);
   if (!Number.isFinite(numericUserId)) return;
 
-  const copy = getOrderStatusCopy(status, 'es');
+  const copy = getOrderStatusCopy(status, locale);
+  const ref = formatOrderReference(orderId, locale);
+
+  let body = `${copy.body} ${ref}`;
+  if (status === 'cancelled' && supportMessageId) {
+    body =
+      locale === 'es'
+        ? `Tu pedido fue cancelado. Revisa el mensaje para más detalles. ${ref}`
+        : `Your order was cancelled. See the message for details. ${ref}`;
+  }
 
   await payload.create({
     collection: 'customer-notifications',
     data: {
       user: numericUserId,
       order: Number(orderId),
+      support_message: supportMessageId ? Number(supportMessageId) : undefined,
       type: 'order_status',
       title: copy.title,
-      body: `${copy.body} (Pedido #${orderId})`,
+      body,
       read: false,
     },
     overrideAccess: true,

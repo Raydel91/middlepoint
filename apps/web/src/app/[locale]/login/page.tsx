@@ -5,9 +5,11 @@ import { signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/routing';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
+  const tc = useTranslations('common');
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const [error, setError] = useState('');
@@ -26,7 +28,7 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError('Credenciales inválidas');
+      setError(t('invalidCredentials'));
       setLoading(false);
       return;
     }
@@ -40,7 +42,14 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="card space-y-4 p-6">
         {error && <div className="rounded-lg bg-red-50 p-3 text-red-700">{error}</div>}
         <input name="email" type="email" placeholder={t('email')} required className="input-field" />
-        <input name="password" type="password" placeholder={t('password')} required className="input-field" />
+        <PasswordInput
+          name="password"
+          placeholder={t('password')}
+          required
+          autoComplete="current-password"
+          revealLabel={tc('showPassword')}
+          hideLabel={tc('hidePassword')}
+        />
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? '...' : t('submitLogin')}
         </button>

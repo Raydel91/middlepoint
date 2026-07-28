@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload';
+import { canAccessAdminNav, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
 
 export const TrackingEvents: CollectionConfig = {
   slug: 'tracking-events',
@@ -7,12 +8,14 @@ export const TrackingEvents: CollectionConfig = {
     useAsTitle: 'event',
     defaultColumns: ['event', 'user', 'product', 'createdAt'],
     group: 'Analytics',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'tracking-events'),
   },
   access: {
-    read: ({ req: { user } }) => user?.role === 'super_admin' || user?.role === 'marketing',
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'tracking-events'),
+    read: ({ req: { user } }) => canAccessAdminNav(user?.role, 'tracking-events'),
     create: () => true,
     update: () => false,
-    delete: ({ req: { user } }) => user?.role === 'super_admin',
+    delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
     {

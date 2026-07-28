@@ -1,5 +1,13 @@
-import type { CollectionConfig } from 'payload';
-import { isAdminRole, isStaffRole } from '@middlepoint/shared';
+import type { CollectionConfig, Where } from 'payload';
+import { APIError } from 'payload';
+import {
+  DELIVERY_ASSIGNABLE_ROLES,
+  isAdminNavHidden,
+  isAdminRole,
+  isDeliveryRole,
+  isOperadorRole,
+  isStaffRole,
+} from '@middlepoint/shared';
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -11,15 +19,28 @@ export const Users: CollectionConfig = {
     lockTime: 600 * 1000,
   },
   admin: {
-    useAsTitle: 'email',
+    useAsTitle: 'nombreCompleto',
     defaultColumns: ['email', 'nombre', 'role', 'createdAt'],
     group: 'Sistema',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'users'),
   },
   access: {
+    // Solo staff (no cliente) entra al admin de usuarios.
+    admin: ({ req: { user } }) => isStaffRole(user?.role),
     read: ({ req: { user } }) => {
       if (!user) return false;
       if (isAdminRole(user.role)) return true;
-      return { id: { equals: user.id } };
+      // Operador necesita ver usuarios asignables como delivery.
+      if (isOperadorRole(user.role)) {
+        return {
+          or: [
+            { id: { equals: user.id } },
+            { role: { in: [...DELIVERY_ASSIGNABLE_ROLES] } },
+          ],
+        } as Where;
+      }
+      // Delivery / marketing / resto: solo su propio usuario.
+      return { id: { equals: user.id } } as Where;
     },
     create: ({ req: { user } }) => isAdminRole(user?.role),
     update: ({ req: { user } }) => {
@@ -54,6 +75,35 @@ export const Users: CollectionConfig = {
     { name: 'nombre', type: 'text', required: true },
     { name: 'apellido', type: 'text', required: true },
     {
+      name: 'nombreCompleto',
+      type: 'text',
+      admin: {
+        hidden: true,
+        readOnly: true,
+      },
+      hooks: {
+        beforeChange: [
+          ({ siblingData }) => {
+            const name = [siblingData?.nombre, siblingData?.apellido]
+              .filter((part) => typeof part === 'string' && part.trim())
+              .join(' ')
+              .trim();
+            return name || siblingData?.email || '';
+          },
+        ],
+        afterRead: [
+          ({ value, siblingData }) => {
+            if (typeof value === 'string' && value.trim()) return value;
+            const name = [siblingData?.nombre, siblingData?.apellido]
+              .filter((part) => typeof part === 'string' && part.trim())
+              .join(' ')
+              .trim();
+            return name || siblingData?.email || value;
+          },
+        ],
+      },
+    },
+    {
       name: 'telefono',
       type: 'text',
     },
@@ -63,6 +113,7 @@ export const Users: CollectionConfig = {
       label: 'Dirección de entrega guardada',
       admin: {
         description: 'El cliente puede editarla desde su cuenta. Se usa para precargar el checkout.',
+        condition: (_, __, { user }) => !isDeliveryRole(user?.role),
       },
       fields: [
         { name: 'street', type: 'text', label: 'Calle y número' },
@@ -77,6 +128,7 @@ export const Users: CollectionConfig = {
       label: 'Contacto secundario',
       admin: {
         description: 'Persona alternativa de contacto para entregas.',
+        condition: (_, __, { user }) => !isDeliveryRole(user?.role),
       },
       fields: [
         { name: 'name', type: 'text', label: 'Nombre' },
@@ -104,5 +156,20 @@ export const Users: CollectionConfig = {
       admin: { hidden: true },
     },
   ],
+  hooks: {
+    beforeLogin: [
+      async ({ user, req }) => {
+        const referer = req.headers?.get('referer') ?? '';
+        const isAdminLogin = referer.includes('/admin');
+        if (isAdminLogin && !isStaffRole(user.role)) {
+          throw new APIError(
+            'Solo el personal autorizado puede acceder al panel de administración.',
+            403,
+          );
+        }
+        return user;
+      },
+    ],
+  },
   timestamps: true,
 };

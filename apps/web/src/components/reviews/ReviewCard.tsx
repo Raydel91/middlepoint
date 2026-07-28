@@ -1,4 +1,7 @@
+'use client';
+
 import { Star } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { MediaImage } from '@/components/media/MediaImage';
 import { ReviewsCarousel } from './ReviewsCarousel';
 import { GoogleReviewButton } from './GoogleReviewButton';
@@ -13,7 +16,8 @@ export type ReviewItem = {
 };
 
 export function ReviewCard({ review }: { review: ReviewItem }) {
-  const date = new Date(review.createdAt).toLocaleDateString('es-DO', {
+  const locale = useLocale();
+  const date = new Date(review.createdAt).toLocaleDateString(locale === 'es' ? 'es-DO' : 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -7,6 +7,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { formatCurrency, type Locale } from '@middlepoint/shared';
 import { TransferBankDetails } from './TransferBankDetails';
 import type { ResolvedStoreContent } from '@/lib/store-content';
+import { checkoutSchema } from '@/lib/validations';
 
 type CheckoutDefaults = {
   address: {
@@ -41,6 +42,10 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
   const [error, setError] = useState('');
   const [csrfToken, setCsrfToken] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash');
+  const [paymentAccountIndex, setPaymentAccountIndex] = useState(0);
+  const [dateBounds, setDateBounds] = useState<{ min: string; max: string }>({ min: '', max: '' });
+
+  const transferAccounts = bankTransfer.accounts.filter((a) => a.accountNumber?.trim());
 
   const [street, setStreet] = useState(defaults?.address.street || '');
   const [city, setCity] = useState(defaults?.address.city || '');
@@ -60,8 +65,43 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
       .catch(() => {});
   }, []);
 
+  // Se calcula tras el montaje para evitar desajustes de hidratación (SSR/cliente).
+  useEffect(() => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const toStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const today = new Date();
+    const max = new Date(today);
+    max.setMonth(max.getMonth() + 6);
+    setDateBounds({ min: toStr(today), max: toStr(max) });
+  }, []);
+
+  function isValidSchedule(date?: string, time?: string): boolean {
+    if (date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+      if (dateBounds.min && date < dateBounds.min) return false;
+      if (dateBounds.max && date > dateBounds.max) return false;
+    }
+    if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return false;
+    return true;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
+    const scheduledDate =
+      (form.elements.namedItem('date') as HTMLInputElement | null)?.value || undefined;
+    const scheduledTime =
+      (form.elements.namedItem('time') as HTMLInputElement | null)?.value || undefined;
+
+    if (!scheduledDate || !scheduledTime) {
+      setError(t('scheduleRequired'));
+      return;
+    }
+    if (!isValidSchedule(scheduledDate, scheduledTime)) {
+      setError(t('invalidSchedule'));
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -92,31 +132,47 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
         }
       : undefined;
 
+    const payload = {
+      items: items.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      paymentMethod,
+      paymentAccountIndex: paymentMethod === 'transfer' ? paymentAccountIndex : undefined,
+      address,
+      contactPrimary,
+      contactSecondary,
+      scheduledDate,
+      scheduledTime,
+      currency: 'DOP' as const,
+      locale,
+      csrfToken: token,
+    };
+
+    const validation = checkoutSchema.safeParse(payload);
+    if (!validation.success) {
+      const field = validation.error.issues[0]?.path.join('.') ?? '';
+      if (field.includes('phone')) {
+        setError(t('invalidPhone'));
+      } else {
+        setError(t('invalidData'));
+      }
+      setLoading(false);
+      return;
+    }
+
     try {
-      await fetch('/api/tracking', {
+      fetch('/api/tracking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: 'checkout_start' }),
-      });
+      }).catch(() => {});
 
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            price: i.price,
-          })),
-          paymentMethod,
-          address,
-          contactPrimary,
-          contactSecondary,
-          scheduledDate: (e.currentTarget.elements.namedItem('date') as HTMLInputElement)?.value || undefined,
-          scheduledTime: (e.currentTarget.elements.namedItem('time') as HTMLInputElement)?.value || undefined,
-          currency: 'DOP',
-          csrfToken: token,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -185,6 +241,8 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
           />
           <input
             name="phone"
+            type="tel"
+            inputMode="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder={t('phone')}
@@ -214,6 +272,8 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
           />
           <input
             name="secondaryPhone"
+            type="tel"
+            inputMode="tel"
             value={secondaryPhone}
             onChange={(e) => setSecondaryPhone(e.target.value)}
             placeholder={t('phone')}
@@ -257,16 +317,21 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
         {paymentMethod === 'transfer' && (
           <div className="mt-4">
             <TransferBankDetails
-              details={bankTransfer}
+              accounts={transferAccounts}
+              instructions={bankTransfer.instructions}
+              selectedIndex={paymentAccountIndex}
+              onSelect={setPaymentAccountIndex}
               labels={{
                 title: t('transferDetailsTitle'),
                 holder: t('transferHolder'),
                 bank: t('transferBank'),
                 accountNumber: t('transferAccountNumber'),
                 accountType: t('transferAccountType'),
+                currency: t('transferCurrency'),
                 rnc: t('transferRnc'),
                 documentId: t('transferDocument'),
                 instructions: t('transferInstructionsFallback'),
+                chooseAccount: t('transferChooseAccount'),
               }}
             />
           </div>
@@ -274,16 +339,26 @@ export function CheckoutForm({ bankTransfer, defaults }: Props) {
       </section>
 
       <section className="card p-6">
-        <h2 className="mb-4 font-secondary text-lg font-semibold">{t('schedule')}</h2>
+        <h2 className="mb-4 font-secondary text-lg font-semibold">
+          {t('schedule')} <span className="text-red-500">*</span>
+        </h2>
         <div className="grid gap-4 md:grid-cols-2">
-          <input name="date" type="date" className="input-field" />
-          <input name="time" type="time" className="input-field" />
+          <input
+            name="date"
+            type="date"
+            required
+            className="input-field"
+            min={dateBounds.min || undefined}
+            max={dateBounds.max || undefined}
+          />
+          <input name="time" type="time" required className="input-field" />
         </div>
+        <p className="mt-2 text-xs text-secondary/60">{t('scheduleHint')}</p>
       </section>
 
       <div className="card p-6">
         <div className="flex justify-between text-xl font-bold">
-          <span>Total</span>
+          <span>{t('total')}</span>
           <span className="text-primary">{formatCurrency(total, 'DOP', locale)}</span>
         </div>
         <button type="submit" disabled={loading || items.length === 0} className="btn-primary mt-4 w-full">

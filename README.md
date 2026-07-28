@@ -54,3 +54,7 @@ MiddlePoint/
 ```bash
 npm test
 ```
+
+## Despliegue (Vercel)
+
+Guía paso a paso: [docs/vercel.md](docs/vercel.md) — root `apps/web`, PostgreSQL externo (Neon/Supabase), variables de entorno y notas sobre media en serverless.

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import { canAccessAdminNav, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
 
 export const OrderItems: CollectionConfig = {
   slug: 'order-items',
@@ -8,12 +8,14 @@ export const OrderItems: CollectionConfig = {
     useAsTitle: 'id',
     defaultColumns: ['order', 'product', 'quantity', 'price'],
     group: 'Ventas',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'order-items'),
   },
   access: {
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'order-items'),
     read: ({ req: { user } }) => !!user,
     create: () => true,
-    update: ({ req: { user } }) => isStaffRole(user?.role),
-    delete: ({ req: { user } }) => user?.role === 'super_admin',
+    update: ({ req: { user } }) => canAccessAdminNav(user?.role, 'order-items'),
+    delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
     {
@@ -41,4 +43,5 @@ export const OrderItems: CollectionConfig = {
       min: 0,
     },
   ],
+  timestamps: true,
 };

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function RegisterPage() {
   const t = useTranslations('auth');
+  const tc = useTranslations('common');
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function RegisterPage() {
     const confirm = form.get('confirmPassword') as string;
 
     if (password !== confirm) {
-      setError('Las contraseñas no coinciden');
+      setError(t('passwordMismatch'));
       setLoading(false);
       return;
     }
@@ -39,7 +41,7 @@ export default function RegisterPage() {
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || 'Error al registrarse');
+      setError(data.error || t('registerError'));
       setLoading(false);
       return;
     }
@@ -56,8 +58,24 @@ export default function RegisterPage() {
         <input name="apellido" placeholder={t('lastName')} required className="input-field" />
         <input name="email" type="email" placeholder={t('email')} required className="input-field" />
         <input name="telefono" placeholder={t('phone')} className="input-field" />
-        <input name="password" type="password" placeholder={t('password')} required minLength={8} className="input-field" />
-        <input name="confirmPassword" type="password" placeholder={t('confirmPassword')} required className="input-field" />
+        <PasswordInput
+          name="password"
+          placeholder={t('password')}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          revealLabel={tc('showPassword')}
+          hideLabel={tc('hidePassword')}
+        />
+        <PasswordInput
+          name="confirmPassword"
+          placeholder={t('confirmPassword')}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          revealLabel={tc('showPassword')}
+          hideLabel={tc('hidePassword')}
+        />
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? '...' : t('submitRegister')}
         </button>

@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
 import { getPayloadClient } from '@/lib/payload';
 import { SupportSection } from '@/components/account/SupportSection';
 import { fetchAccountSupportMessages } from '@/lib/account-data';
@@ -21,22 +22,32 @@ export default async function AccountMessagesPage({ params }: Props) {
   }
 
   return (
-    <SupportSection
-      messages={supportMessages as Parameters<typeof SupportSection>[0]['messages']}
-      labels={{
+    <Suspense fallback={<p className="text-center text-sm text-secondary/60">...</p>}>
+      <SupportSection
+        messages={supportMessages as Parameters<typeof SupportSection>[0]['messages']}
+        labels={{
         title: t('supportTitle'),
-        subject: t('supportSubject'),
-        message: t('supportMessage'),
-        submit: t('supportSubmit'),
-        success: t('supportSuccess'),
-        error: t('supportError'),
-        empty: t('supportEmpty'),
+        teamName: t('supportTeamName'),
         yourMessage: t('supportYourMessage'),
         teamReply: t('supportTeamReply'),
-        statusOpen: t('supportStatusOpen'),
-        statusAnswered: t('supportStatusAnswered'),
-        statusClosed: t('supportStatusClosed'),
+        statusPending: t('supportStatusPending'),
+        statusResponded: t('supportStatusResponded'),
+        noReplyYet: t('supportNoReplyYet'),
+        sendInChat: t('supportSendInChat'),
+        chatPlaceholder: t('supportChatPlaceholder'),
+        chatClosed: t('supportChatClosed'),
+        replyError: t('supportReplyError'),
+        deleteMessage: t('supportDeleteMessage'),
+        deleteChat: t('supportDeleteChat'),
+        confirmDeleteMessage: t('supportConfirmDeleteMessage'),
+        confirmDeleteChat: t('supportConfirmDeleteChat'),
+        select: t('supportSelect'),
+        cancel: t('supportCancel'),
+        selectAll: t('supportSelectAll'),
+        deleteForMe: t('supportDeleteForMe'),
+        deleteForEveryone: t('supportDeleteForEveryone'),
       }}
-    />
+      />
+    </Suspense>
   );
 }

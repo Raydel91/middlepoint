@@ -10,12 +10,18 @@ import type { Locale } from '@middlepoint/shared';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { SessionProvider } from '@/components/providers/SessionProvider';
 import { BRAND } from '@/lib/brand';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 
 type Props = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export function generateStaticParams() {

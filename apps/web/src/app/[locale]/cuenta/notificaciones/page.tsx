@@ -29,6 +29,19 @@ export default async function AccountNotificationsPage({ params }: Props) {
         title: t('notificationsTitle'),
         empty: t('notificationsEmpty'),
         markRead: t('notificationsMarkRead'),
+        markUnread: t('notificationsMarkUnread'),
+        delete: t('notificationsDelete'),
+        deleteAll: t('notificationsDeleteAll'),
+        selectAll: t('notificationsSelectAll'),
+        deselectAll: t('notificationsDeselectAll'),
+        markSelectedRead: t('notificationsMarkSelectedRead'),
+        markSelectedUnread: t('notificationsMarkSelectedUnread'),
+        deleteSelected: t('notificationsDeleteSelected'),
+        markAllRead: t('notificationsMarkAllRead'),
+        markAllUnread: t('notificationsMarkAllUnread'),
+        confirmDelete: t('notificationsConfirmDelete'),
+        confirmDeleteAll: t('notificationsConfirmDeleteAll'),
+        viewMessage: t('notificationsViewMessage'),
       }}
     />
   );

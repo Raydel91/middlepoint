@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
 import { getPayloadClient } from '@/lib/payload';
 import { handleApiError, AppError } from '@/lib/logger';
+import { getCustomerSession } from '@/lib/account-auth';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'cliente') {
+    const session = await getCustomerSession();
+    if (!session) {
       throw new AppError('No autorizado', 401, 'UNAUTHORIZED');
     }
 

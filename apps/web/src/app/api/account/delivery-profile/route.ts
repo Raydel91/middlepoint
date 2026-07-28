@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
 import { getPayloadClient } from '@/lib/payload';
 import { handleApiError, AppError } from '@/lib/logger';
 import { deliveryProfileSchema } from '@/lib/validations';
 import { parseCheckoutProfilePayload } from '@/lib/user-delivery-profile';
+import { getCustomerSession } from '@/lib/account-auth';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'cliente') {
+    const session = await getCustomerSession();
+    if (!session) {
       throw new AppError('No autorizado', 401, 'UNAUTHORIZED');
     }
 
@@ -32,8 +32,8 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'cliente') {
+    const session = await getCustomerSession();
+    if (!session) {
       throw new AppError('No autorizado', 401, 'UNAUTHORIZED');
     }
 

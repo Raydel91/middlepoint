@@ -8,7 +8,8 @@ import { ProductGallery } from '@/components/products/ProductGallery';
 import type { ResolvedMedia } from '@/lib/media';
 import { getProductCardImageUrl } from '@/lib/media';
 import type { Media } from '@/payload-types';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { QuantitySelector } from './QuantitySelector';
 
 interface ProductDetailProps {
   product: {
@@ -37,6 +38,7 @@ export function ProductDetail({ product, gallery, related }: ProductDetailProps)
   const t = useTranslations('product');
   const locale = useLocale() as Locale;
   const { addItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     fetch('/api/tracking', {
@@ -49,7 +51,7 @@ export function ProductDetail({ product, gallery, related }: ProductDetailProps)
   function handleAddToCart() {
     addItem({
       productId: String(product.id),
-      quantity: 1,
+      quantity,
       price: product.precio,
       name: product.nombre,
     });
@@ -85,9 +87,15 @@ export function ProductDetail({ product, gallery, related }: ProductDetailProps)
               <p className="text-secondary/70">{getI18nValue(product.ingredientes, locale)}</p>
             </div>
           )}
-          <button onClick={handleAddToCart} className="btn-primary mt-6 w-full md:w-auto">
-            {t('addToCart')}
-          </button>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-secondary/70">{t('quantity')}</span>
+              <QuantitySelector value={quantity} onChange={setQuantity} />
+            </div>
+            <button onClick={handleAddToCart} className="btn-primary w-full sm:w-auto">
+              {t('addToCart')}
+            </button>
+          </div>
         </div>
       </div>
 

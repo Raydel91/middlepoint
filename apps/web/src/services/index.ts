@@ -191,6 +191,7 @@ export class OrderService {
     items: Array<{ productId: string | number; quantity: number; price: number }>;
     total: number;
     paymentMethod: 'cash' | 'transfer';
+    paymentAccount?: Record<string, unknown>;
     address: Record<string, unknown>;
     contactPrimary: Record<string, unknown>;
     contactSecondary?: Record<string, unknown>;
@@ -198,6 +199,7 @@ export class OrderService {
     scheduledTime?: string;
     currency?: 'DOP' | 'USD';
     exchangeRate?: number;
+    locale?: 'es' | 'en';
   }) {
     const order = await this.payload.create({
       collection: 'orders',
@@ -206,13 +208,15 @@ export class OrderService {
         total: data.total,
         status: 'pending',
         payment_method: data.paymentMethod,
+        payment_account: data.paymentAccount || undefined,
         address: data.address,
         contact_primary: data.contactPrimary,
-        contact_secondary: data.contactSecondary,
-        scheduled_date: data.scheduledDate,
-        scheduled_time: data.scheduledTime,
+        contact_secondary: data.contactSecondary || undefined,
+        scheduled_date: data.scheduledDate?.trim() || undefined,
+        scheduled_time: data.scheduledTime?.trim() || undefined,
         currency: data.currency || 'DOP',
         exchange_rate_snapshot: data.exchangeRate,
+        customer_locale: data.locale || 'es',
       },
       overrideAccess: true,
     });
@@ -280,24 +284,30 @@ export class OrderService {
 export class DeliveryService {
   constructor(private payload: Payload) {}
 
-  async assignDelivery(orderId: string | number, deliveryId: string | number) {
-    const delivery = await this.payload.findByID({
-      collection: 'deliveries',
-      id: deliveryId,
-    });
-
+  async assignDelivery(orderId: string | number, deliveryUserId: string | number) {
+    const deliveryId = Number(deliveryUserId);
+    if (!Number.isFinite(deliveryId)) {
+      throw new Error('ID de repartidor inválido');
+    }
+    const orderIdNum = Number(orderId);
+    if (!Number.isFinite(orderIdNum)) {
+      throw new Error('ID de pedido inválido');
+    }
     await this.payload.update({
       collection: 'orders',
       id: orderId,
       data: { delivery: deliveryId, status: 'in_transit' },
     });
 
+    const fleet = await this.getByUser(deliveryUserId);
+    if (!fleet) return null;
+
     return this.payload.update({
       collection: 'deliveries',
-      id: deliveryId,
+      id: fleet.id,
       data: {
         status: 'busy',
-        current_order: orderId,
+        current_order: orderIdNum,
       },
     });
   }
@@ -422,15 +432,19 @@ export class AnalyticsService {
     sessionId?: string;
     metadata?: Record<string, unknown>;
   }) {
+    const userId = data.userId != null ? Number(data.userId) : undefined;
+    const productId = data.productId != null ? Number(data.productId) : undefined;
+
     return this.payload.create({
       collection: 'tracking-events',
       data: {
         event: data.event,
-        user: data.userId,
-        product: data.productId,
+        user: Number.isFinite(userId) ? userId : undefined,
+        product: Number.isFinite(productId) ? productId : undefined,
         session_id: data.sessionId,
         metadata: data.metadata,
       },
+      overrideAccess: true,
     });
   }
 

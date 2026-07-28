@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import { canAccessAdminNav, canUseStoreAccount, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
 
 export const CustomerNotifications: CollectionConfig = {
   slug: 'customer-notifications',
@@ -9,20 +9,27 @@ export const CustomerNotifications: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'user', 'type', 'read', 'createdAt'],
     description: 'Avisos automáticos de pedidos y respuestas a mensajes de soporte.',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'customer-notifications'),
   },
   access: {
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'customer-notifications'),
     read: ({ req: { user } }) => {
       if (!user) return false;
-      if (isStaffRole(user.role)) return true;
+      if (canAccessAdminNav(user.role, 'customer-notifications')) return true;
       return { user: { equals: user.id } };
     },
-    create: ({ req: { user } }) => isStaffRole(user?.role),
+    create: ({ req: { user } }) => canAccessAdminNav(user?.role, 'customer-notifications'),
     update: ({ req: { user } }) => {
       if (!user) return false;
-      if (isStaffRole(user.role)) return true;
+      if (canAccessAdminNav(user.role, 'customer-notifications')) return true;
       return { user: { equals: user.id } };
     },
-    delete: ({ req: { user } }) => user?.role === 'super_admin',
+    delete: ({ req: { user } }) => {
+      if (!user) return false;
+      if (isAdminRole(user.role)) return true;
+      if (canUseStoreAccount(user.role)) return { user: { equals: user.id } };
+      return false;
+    },
   },
   fields: [
     {
@@ -36,6 +43,12 @@ export const CustomerNotifications: CollectionConfig = {
       name: 'order',
       type: 'relationship',
       relationTo: 'orders',
+      admin: { readOnly: true },
+    },
+    {
+      name: 'support_message',
+      type: 'relationship',
+      relationTo: 'support-messages',
       admin: { readOnly: true },
     },
     {

@@ -1,8 +1,8 @@
 export type Locale = 'es' | 'en';
 
 export type I18nField = {
-  es: string;
-  en: string;
+  es?: string | null;
+  en?: string | null;
 };
 
 export type UserRole =
@@ -21,6 +21,7 @@ export type OrderStatus =
   | 'ready'
   | 'in_transit'
   | 'delivered'
+  | 'returned'
   | 'cancelled';
 
 export type DeliveryStatus = 'available' | 'busy' | 'offline';

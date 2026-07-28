@@ -1,5 +1,10 @@
 import type { CollectionConfig } from 'payload';
-import { isStaffRole } from '@middlepoint/shared';
+import {
+  DELIVERY_ASSIGNABLE_ROLES,
+  canAccessAdminNav,
+  isAdminNavHidden,
+  isDeliveryRole,
+} from '@middlepoint/shared';
 
 export const Deliveries: CollectionConfig = {
   slug: 'deliveries',
@@ -8,11 +13,22 @@ export const Deliveries: CollectionConfig = {
     useAsTitle: 'id',
     defaultColumns: ['user', 'status', 'current_order'],
     group: 'Logística',
+    hidden: ({ user }) => isAdminNavHidden(user?.role, 'deliveries'),
   },
   access: {
-    read: ({ req: { user } }) => isStaffRole(user?.role) || user?.role === 'delivery',
-    create: ({ req: { user } }) => isStaffRole(user?.role),
-    update: ({ req: { user } }) => isStaffRole(user?.role) || user?.role === 'delivery',
+    // Delivery no gestiona la flota en el panel; solo pedidos asignados.
+    admin: ({ req: { user } }) => canAccessAdminNav(user?.role, 'deliveries'),
+    read: ({ req: { user } }) => {
+      if (!user) return false;
+      if (isDeliveryRole(user.role)) return { user: { equals: user.id } };
+      return canAccessAdminNav(user.role, 'deliveries');
+    },
+    create: ({ req: { user } }) => canAccessAdminNav(user?.role, 'deliveries'),
+    update: ({ req: { user } }) => {
+      if (!user) return false;
+      if (isDeliveryRole(user.role)) return { user: { equals: user.id } };
+      return canAccessAdminNav(user.role, 'deliveries');
+    },
     delete: ({ req: { user } }) => user?.role === 'super_admin',
   },
   fields: [
@@ -21,6 +37,14 @@ export const Deliveries: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       required: true,
+      filterOptions: {
+        role: {
+          in: [...DELIVERY_ASSIGNABLE_ROLES],
+        },
+      },
+      access: {
+        update: ({ req: { user } }) => canAccessAdminNav(user?.role, 'deliveries'),
+      },
     },
     {
       name: 'status',
@@ -37,11 +61,17 @@ export const Deliveries: CollectionConfig = {
       name: 'current_order',
       type: 'relationship',
       relationTo: 'orders',
+      access: {
+        update: ({ req: { user } }) => canAccessAdminNav(user?.role, 'deliveries'),
+      },
     },
     {
       name: 'delivery_history',
       type: 'json',
       defaultValue: [],
+      access: {
+        update: ({ req: { user } }) => canAccessAdminNav(user?.role, 'deliveries'),
+      },
     },
   ],
   timestamps: true,

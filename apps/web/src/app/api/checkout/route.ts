@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth/config';
 import { checkoutSchema } from '@/lib/validations';
 import { validateCsrfToken } from '@/lib/csrf';
 import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
-import { handleApiError, AppError } from '@/lib/logger';
+import { handleApiError, AppError, logger } from '@/lib/logger';
 import {
   sendOrderConfirmationEmail,
   sendWhatsAppNotification,
@@ -13,6 +13,7 @@ import {
 import { getI18nValue } from '@middlepoint/shared';
 import { getPaymentProvider } from '@/lib/payments';
 import { parseCheckoutProfilePayload } from '@/lib/user-delivery-profile';
+import { getStoreContent } from '@/lib/store-content';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +45,16 @@ export async function POST(request: NextRequest) {
     const paymentProvider = getPaymentProvider(data.paymentMethod);
     await paymentProvider.processPayment(total, data.currency, { orderItems: data.items.length });
 
+    let paymentAccount: Record<string, unknown> | undefined;
+    if (data.paymentMethod === 'transfer') {
+      const content = await getStoreContent(data.locale || 'es');
+      const usableAccounts = content.payment.accounts.filter((a) => a.accountNumber?.trim());
+      if (usableAccounts.length > 0) {
+        const index = Math.min(Math.max(data.paymentAccountIndex ?? 0, 0), usableAccounts.length - 1);
+        paymentAccount = { ...usableAccounts[index] };
+      }
+    }
+
     const order = await services.order.createOrder({
       userId: session?.user?.id ? Number(session.user.id) : undefined,
       items: data.items.map((i) => ({
@@ -53,6 +64,7 @@ export async function POST(request: NextRequest) {
       })),
       total,
       paymentMethod: data.paymentMethod,
+      paymentAccount,
       address: data.address,
       contactPrimary: data.contactPrimary,
       contactSecondary: data.contactSecondary,
@@ -60,62 +72,82 @@ export async function POST(request: NextRequest) {
       scheduledTime: data.scheduledTime,
       currency: data.currency,
       exchangeRate: settings.exchange_rate_usd,
+      locale: data.locale,
     });
 
     if (session?.user?.id) {
       const userId = Number(session.user.id);
       if (Number.isFinite(userId)) {
-        await payload.update({
-          collection: 'users',
-          id: userId,
-          data: {
-            telefono: data.contactPrimary.phone,
-            ...parseCheckoutProfilePayload({
-              address: data.address,
-              contactSecondary: data.contactSecondary,
-            }),
-          },
-          overrideAccess: true,
-        });
+        try {
+          await payload.update({
+            collection: 'users',
+            id: userId,
+            data: {
+              telefono: data.contactPrimary.phone,
+              ...parseCheckoutProfilePayload({
+                address: data.address,
+                contactSecondary: data.contactSecondary,
+              }),
+            },
+            overrideAccess: true,
+          });
+        } catch (profileErr) {
+          logger.warn('Could not sync checkout profile to user', {
+            userId,
+            error: profileErr instanceof Error ? profileErr.message : String(profileErr),
+          });
+        }
       }
     }
 
-    await services.analytics.trackEvent({
-      event: 'purchase',
-      userId: session?.user?.id,
-      metadata: { orderId: order.id, total },
-    });
+    try {
+      await services.analytics.trackEvent({
+        event: 'purchase',
+        userId: session?.user?.id,
+        metadata: { orderId: order.id, total },
+      });
+    } catch {
+      /* non-blocking */
+    }
 
-    const itemsWithNames = await Promise.all(
-      data.items.map(async (item) => {
-        const product = await payload.findByID({
-          collection: 'products',
-          id: item.productId,
-        });
-        return {
-          name: getI18nValue(product.nombre, 'es'),
-          quantity: item.quantity,
-          price: item.price,
-        };
-      }),
-    );
-
-    const emailData = {
-      orderId: order.id,
-      total,
-      currency: data.currency,
-      customerName: data.contactPrimary.name,
-      customerEmail: data.contactPrimary.email || session?.user?.email || '',
-      items: itemsWithNames,
-    };
-
-    await sendOrderConfirmationEmail(emailData);
-
-    if (data.contactPrimary.phone) {
-      await sendWhatsAppNotification(
-        data.contactPrimary.phone,
-        buildOrderWhatsAppMessage(emailData),
+    try {
+      const itemsWithNames = await Promise.all(
+        data.items.map(async (item) => {
+          const product = await payload.findByID({
+            collection: 'products',
+            id: item.productId,
+            overrideAccess: true,
+          });
+          return {
+            name: getI18nValue(product.nombre, data.locale || 'es'),
+            quantity: item.quantity,
+            price: item.price,
+          };
+        }),
       );
+
+      const emailData = {
+        orderId: order.id,
+        total,
+        currency: data.currency,
+        customerName: data.contactPrimary.name,
+        customerEmail: data.contactPrimary.email || session?.user?.email || '',
+        items: itemsWithNames,
+      };
+
+      await sendOrderConfirmationEmail(emailData);
+
+      if (data.contactPrimary.phone) {
+        await sendWhatsAppNotification(
+          data.contactPrimary.phone,
+          buildOrderWhatsAppMessage(emailData),
+        );
+      }
+    } catch (notifyErr) {
+      logger.warn('Post-checkout notifications failed', {
+        orderId: order.id,
+        error: notifyErr instanceof Error ? notifyErr.message : String(notifyErr),
+      });
     }
 
     return NextResponse.json({ success: true, orderId: order.id });

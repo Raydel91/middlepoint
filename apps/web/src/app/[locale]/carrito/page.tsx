@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { auth } from '@/lib/auth/config';
 import { CartView } from '@/components/cart/CartView';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -6,6 +8,12 @@ type Props = { params: Promise<{ locale: string }> };
 export default async function CartPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/carrito`);
+  }
+
   const t = await getTranslations('cart');
 
   return (

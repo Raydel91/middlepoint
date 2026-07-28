@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { ReviewCard, type ReviewItem } from './ReviewCard';
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function ReviewsCarousel({ reviews }: Props) {
+  const t = useTranslations('reviews');
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -50,7 +52,7 @@ export function ReviewsCarousel({ reviews }: Props) {
             onClick={() => scrollByPage(-1)}
             disabled={!canScrollLeft}
             className="absolute -left-2 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition hover:bg-background disabled:opacity-30 md:block"
-            aria-label="Reseñas anteriores"
+            aria-label={t('previous')}
           >
             <ChevronLeft size={20} className="text-secondary" />
           </button>
@@ -59,7 +61,7 @@ export function ReviewsCarousel({ reviews }: Props) {
             onClick={() => scrollByPage(1)}
             disabled={!canScrollRight}
             className="absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition hover:bg-background disabled:opacity-30 md:block"
-            aria-label="Reseñas siguientes"
+            aria-label={t('next')}
           >
             <ChevronRight size={20} className="text-secondary" />
           </button>

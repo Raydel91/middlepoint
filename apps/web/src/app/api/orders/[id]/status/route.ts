@@ -12,6 +12,7 @@ const statusSchema = z.object({
     'ready',
     'in_transit',
     'delivered',
+    'returned',
     'cancelled',
   ]),
 });
