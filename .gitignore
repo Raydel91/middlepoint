@@ -11,7 +11,6 @@ Passwords.txt
 Thumbs.db
 coverage/
 .turbo/
-payload-types.ts
 # Uploads de Payload (no el componente React en src/components/media)
 apps/web/media/
 media/
