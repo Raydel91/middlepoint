@@ -43,7 +43,7 @@ URL real del proyecto: `https://middlepoint-khaki.vercel.app`
 - Tienda: https://middlepoint-khaki.vercel.app/es
 - Admin: https://middlepoint-khaki.vercel.app/admin (sin `/es`)
 
-Con `PAYLOAD_DB_PUSH=true`, el **build** de Vercel ejecuta el push de esquema antes de `next build`. Cuando veas tablas en Neon, quita esa variable (o pon `false`) y redespliega.
+Con `PAYLOAD_DB_PUSH=true`, el build fuerza `NODE_ENV=development` solo en el script de push (Payload no hace push en production). Cuando veas tablas en Neon, quita esa variable y redespliega.
 
 Actualiza también:
 - `NEXT_PUBLIC_SERVER_URL=https://middlepoint-khaki.vercel.app`

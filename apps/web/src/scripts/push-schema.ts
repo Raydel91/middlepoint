@@ -1,6 +1,10 @@
 /**
  * Crea/sincroniza el esquema de Payload en la BD de DATABASE_URI.
  * Solo corre si PAYLOAD_DB_PUSH=true (p. ej. primer deploy en Vercel).
+ *
+ * Importante: @payloadcms/db-postgres solo ejecuta pushDevSchema cuando
+ * NODE_ENV !== 'production'. En el build de Vercel NODE_ENV=production,
+ * así que forzamos development solo para este script.
  */
 if (process.env.PAYLOAD_DB_PUSH !== 'true') {
   console.log('PAYLOAD_DB_PUSH != true — se omite push de esquema.');
@@ -16,10 +20,14 @@ if (!process.env.PAYLOAD_SECRET) {
   process.exit(1);
 }
 
-const { getPayloadClient } = await import('../lib/payload');
+process.env.NODE_ENV = 'development';
+process.env.PAYLOAD_MIGRATING = 'false';
 
-const payload = await getPayloadClient();
-console.log('Esquema sincronizado con PostgreSQL.');
+const { getPayload } = await import('payload');
+const config = (await import('@/payload.config')).default;
+
+const payload = await getPayload({ config });
+console.log('Esquema sincronizado con PostgreSQL (pushDevSchema).');
 
 const users = await payload.find({
   collection: 'users',
