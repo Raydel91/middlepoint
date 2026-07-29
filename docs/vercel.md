@@ -38,9 +38,16 @@ Opcionales: `SMTP_*`, `WHATSAPP_WEBHOOK_URL`, Upstash Redis.
 
 ## 4. Tras el deploy
 
-- Tienda: https://middlepoint.vercel.app/es
-- Admin: https://middlepoint.vercel.app/admin
-- Quitar `PAYLOAD_DB_PUSH` y crear usuario admin / seed.
+URL real del proyecto: `https://middlepoint-khaki.vercel.app`
+
+- Tienda: https://middlepoint-khaki.vercel.app/es
+- Admin: https://middlepoint-khaki.vercel.app/admin (sin `/es`)
+
+Con `PAYLOAD_DB_PUSH=true`, el **build** de Vercel ejecuta el push de esquema antes de `next build`. Cuando veas tablas en Neon, quita esa variable (o pon `false`) y redespliega.
+
+Actualiza también:
+- `NEXT_PUBLIC_SERVER_URL=https://middlepoint-khaki.vercel.app`
+- `AUTH_URL=https://middlepoint-khaki.vercel.app`
 
 ## 5. Media / archivos
 

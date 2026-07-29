@@ -71,7 +71,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS) || 10000,
     },
   }),
   sharp,
