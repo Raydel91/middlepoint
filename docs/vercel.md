@@ -3,7 +3,7 @@
 Monorepo npm workspaces: la app Next.js + Payload vive en `apps/web`.
 
 Repo: https://github.com/Raydel91/middlepoint  
-URL objetivo: **https://middlepoint.vercel.app**
+URL actual: **https://middlepointrd.vercel.app**
 
 ## 1. Base de datos (obligatorio)
 
@@ -14,9 +14,8 @@ PostgreSQL en Neon (u otro). Copia el connection string (pooler si Neon) en `DAT
 ## 2. Crear proyecto en Vercel
 
 1. [vercel.com/new](https://vercel.com/new) → Importar `Raydel91/middlepoint`.
-2. **Project Name:** `middlepoint` → URL `https://middlepoint.vercel.app`
-3. **Root Directory:** `apps/web`
-4. Framework: Next.js. `vercel.json` define `installCommand` desde la raíz del monorepo.
+2. **Root Directory:** `apps/web`
+3. Framework: Next.js. `vercel.json` define `installCommand` desde la raíz del monorepo.
 
 ## 3. Variables de entorno (Production)
 
@@ -27,34 +26,24 @@ PostgreSQL en Neon (u otro). Copia el connection string (pooler si Neon) en `DAT
 | `AUTH_SECRET` | Secreto ≥32 chars |
 | `JWT_SECRET` | Secreto ≥32 chars |
 | `JWT_REFRESH_SECRET` | Secreto ≥32 chars |
-| `NEXT_PUBLIC_SERVER_URL` | `https://middlepoint.vercel.app` |
-| `AUTH_URL` | `https://middlepoint.vercel.app` |
-| `TZ` | `America/Santo_Domingo` |
+| `NEXT_PUBLIC_SERVER_URL` | `https://middlepointrd.vercel.app` |
+| `AUTH_URL` | `https://middlepointrd.vercel.app` |
+| `BLOB_READ_WRITE_TOKEN` | Lo crea Vercel al añadir Storage → Blob |
 | `DEFAULT_CURRENCY` | `DOP` |
-| `EXCHANGE_RATE_USD` | `58.50` |
+| `EXCHANGE_RATE_USD` | `58.50` (opcional; la tasa editable está en admin) |
 | `PAYLOAD_DB_PUSH` | `true` solo en el **primer** deploy |
-
-Opcionales: `SMTP_*`, `WHATSAPP_WEBHOOK_URL`, Upstash Redis.
 
 ## 4. Tras el deploy
 
-URL real del proyecto: `https://middlepoint-khaki.vercel.app`
+- Tienda: https://middlepointrd.vercel.app/es
+- Admin: https://middlepointrd.vercel.app/admin (sin `/es`)
 
-- Tienda: https://middlepoint-khaki.vercel.app/es
-- Admin: https://middlepoint-khaki.vercel.app/admin (sin `/es`)
-
-Con `PAYLOAD_DB_PUSH=true`, el build fuerza `NODE_ENV=development` solo en el script de push (Payload no hace push en production). Cuando veas tablas en Neon, quita esa variable y redespliega.
-
-Actualiza también:
-- `NEXT_PUBLIC_SERVER_URL=https://middlepoint-khaki.vercel.app`
-- `AUTH_URL=https://middlepoint-khaki.vercel.app`
+Si cambias el dominio `.vercel.app`, **actualiza** `NEXT_PUBLIC_SERVER_URL` y `AUTH_URL` y haz **Redeploy** (las `NEXT_PUBLIC_*` se fijan en el build).
 
 ## 5. Media / archivos (Vercel Blob)
 
-En Vercel el disco no persiste; hay que usar Blob:
-
-1. Proyecto en Vercel → **Storage** → **Create** → **Blob** (access: **public**).
-2. Conéctalo al proyecto; Vercel añade `BLOB_READ_WRITE_TOKEN`.
+1. Proyecto → **Storage** → **Create** → **Blob** (access: **public**).
+2. Conéctalo al proyecto; aparece `BLOB_READ_WRITE_TOKEN`.
 3. Redeploy.
 
 Sin ese token, guardar categorías/productos con imagen falla.
