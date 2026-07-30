@@ -49,6 +49,6 @@ Si cambias el dominio `.vercel.app`, **actualiza** `NEXT_PUBLIC_SERVER_URL` y `A
 Sin ese token: el admin puede cargar, pero Payload avisa que `media` no tiene storage adapter y las subidas fallan en Vercel.
 Localmente, sin token, sigue usándose la carpeta `media/` en disco.
 
-**Sensitive:** si marcas el token como Sensitive, Vercel no lo expone en el *build*. El código lee `process.env[name]` en runtime a propósito; no hace falta quitar Sensitive.
+**Sensitive:** Vercel no deja editar Sensitive después de crearla. Si hace falta recrearla: copia el valor → borra la variable → Add New con el mismo nombre **sin** marcar Sensitive → Redeploy. El adaptador de MiddlePoint lee el token en runtime, así que Sensitive también debería funcionar.
 
 **No confundir** con variables de Neon (`POSTGRES_*` / `DATABASE_URI`): Blob es Storage → Blob, no la base de datos.

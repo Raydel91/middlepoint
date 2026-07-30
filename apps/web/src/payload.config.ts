@@ -1,6 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob';
 import path from 'path';
 import { buildConfig } from 'payload';
 import { fileURLToPath } from 'url';
@@ -19,18 +18,20 @@ import { StoreContent } from './globals/StoreContent';
 import { Reviews } from './collections/Reviews';
 import { CustomerNotifications } from './collections/CustomerNotifications';
 import { SupportMessages } from './collections/SupportMessages';
+import {
+  shouldUseVercelBlobStorage,
+  vercelBlobStorageFromEnv,
+} from './lib/vercel-blob-storage';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-/** Evita que Next/webpack inlinée `undefined` en build: las vars Sensitive de Vercel solo existen en runtime. */
 function readEnv(name: string): string | undefined {
-  const value = process.env[name];
+  const value = process['env'][name];
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
 }
 
-const blobToken = readEnv('BLOB_READ_WRITE_TOKEN');
 const databaseUri =
   readEnv('DATABASE_URI') || readEnv('POSTGRES_URL') || readEnv('DATABASE_URL') || '';
 
@@ -89,19 +90,9 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
-    // En Vercel el disco es efímero; sin Blob las subidas de media fallan al guardar.
-    // El importMap ya tiene stub de VercelBlobClientUploadHandler (clientUploads:false).
-    vercelBlobStorage({
-      enabled: Boolean(blobToken),
-      collections: {
-        media: true,
-      },
-      token: blobToken,
-      // clientUploads:true rompe el build de webpack (pino/worker_threads).
-      // Subidas por servidor OK hasta ~4.5MB en Vercel.
-      clientUploads: false,
-      addRandomSuffix: true,
-    }),
+    // En Vercel: adaptador que lee BLOB_READ_WRITE_TOKEN en runtime (Sensitive OK).
+    // Localmente sin token: disco `media/`.
+    ...(shouldUseVercelBlobStorage() ? [vercelBlobStorageFromEnv()] : []),
   ],
   localization: {
     locales: [
