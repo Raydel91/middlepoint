@@ -43,8 +43,10 @@ Si cambias el dominio `.vercel.app`, **actualiza** `NEXT_PUBLIC_SERVER_URL` y `A
 ## 5. Media / archivos (Vercel Blob)
 
 1. Proyecto → **Storage** → **Create** → **Blob** (access: **public**).
-2. Conéctalo al proyecto; aparece `BLOB_READ_WRITE_TOKEN`.
+2. Conéctalo al proyecto; aparece `BLOB_READ_WRITE_TOKEN` (empieza por `vercel_blob_rw_`).
 3. Redeploy.
 
-Sin ese token, guardar categorías/productos con imagen falla.
+Sin ese token: el admin puede cargar, pero Payload avisa que `media` no tiene storage adapter y las subidas fallan en Vercel.
 Localmente, sin token, sigue usándose la carpeta `media/` en disco.
+
+**No confundir** con variables de Neon (`POSTGRES_*` / `DATABASE_URI`): Blob es Storage → Blob, no la base de datos.

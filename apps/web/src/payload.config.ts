@@ -86,17 +86,22 @@ export default buildConfig({
   sharp,
   plugins: [
     // En Vercel el disco es efímero; sin Blob las subidas de media fallan al guardar.
-    vercelBlobStorage({
-      enabled: Boolean(blobToken),
-      collections: {
-        media: true,
-      },
-      token: blobToken,
-      // clientUploads:true rompe el build de webpack (pino/worker_threads en el bundle cliente).
-      // Subidas por servidor OK hasta ~4.5MB en Vercel.
-      clientUploads: false,
-      addRandomSuffix: true,
-    }),
+    // Solo registrar el plugin con token: sin él, initClientUploads igual mete el
+    // provider en el admin y exige la entrada del importMap (admin en blanco).
+    ...(blobToken
+      ? [
+          vercelBlobStorage({
+            collections: {
+              media: true,
+            },
+            token: blobToken,
+            // clientUploads:true rompe el build de webpack (pino/worker_threads).
+            // Subidas por servidor OK hasta ~4.5MB en Vercel.
+            clientUploads: false,
+            addRandomSuffix: true,
+          }),
+        ]
+      : []),
   ],
   localization: {
     locales: [
