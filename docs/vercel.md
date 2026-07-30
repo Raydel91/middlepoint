@@ -44,9 +44,11 @@ Si cambias el dominio `.vercel.app`, **actualiza** `NEXT_PUBLIC_SERVER_URL` y `A
 
 1. Proyecto → **Storage** → **Create** → **Blob** (access: **public**).
 2. Conéctalo al proyecto; aparece `BLOB_READ_WRITE_TOKEN` (empieza por `vercel_blob_rw_`).
-3. Redeploy.
+3. Redeploy **sin** usar build cache antiguo (Deployments → Redeploy).
 
 Sin ese token: el admin puede cargar, pero Payload avisa que `media` no tiene storage adapter y las subidas fallan en Vercel.
 Localmente, sin token, sigue usándose la carpeta `media/` en disco.
+
+**Sensitive:** si marcas el token como Sensitive, Vercel no lo expone en el *build*. El código lee `process.env[name]` en runtime a propósito; no hace falta quitar Sensitive.
 
 **No confundir** con variables de Neon (`POSTGRES_*` / `DATABASE_URI`): Blob es Storage → Blob, no la base de datos.

@@ -23,12 +23,16 @@ import { SupportMessages } from './collections/SupportMessages';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+/** Evita que Next/webpack inlinée `undefined` en build: las vars Sensitive de Vercel solo existen en runtime. */
+function readEnv(name: string): string | undefined {
+  const value = process.env[name];
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+const blobToken = readEnv('BLOB_READ_WRITE_TOKEN');
 const databaseUri =
-  process.env.DATABASE_URI ||
-  process.env.POSTGRES_URL ||
-  process.env.DATABASE_URL ||
-  '';
+  readEnv('DATABASE_URI') || readEnv('POSTGRES_URL') || readEnv('DATABASE_URL') || '';
 
 
 export default buildConfig({
@@ -69,39 +73,35 @@ export default buildConfig({
   ],
   globals: [Settings, StoreContent],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret: readEnv('PAYLOAD_SECRET') || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
     // Evita prompts interactivos de drizzle push que congelan el servidor en dev.
-    push: process.env.PAYLOAD_DB_PUSH === 'true',
+    push: readEnv('PAYLOAD_DB_PUSH') === 'true',
     pool: {
       connectionString: databaseUri,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS) || 10000,
+      connectionTimeoutMillis: Number(readEnv('DB_CONNECT_TIMEOUT_MS')) || 10000,
     },
   }),
   sharp,
   plugins: [
     // En Vercel el disco es efímero; sin Blob las subidas de media fallan al guardar.
-    // Solo registrar el plugin con token: sin él, initClientUploads igual mete el
-    // provider en el admin y exige la entrada del importMap (admin en blanco).
-    ...(blobToken
-      ? [
-          vercelBlobStorage({
-            collections: {
-              media: true,
-            },
-            token: blobToken,
-            // clientUploads:true rompe el build de webpack (pino/worker_threads).
-            // Subidas por servidor OK hasta ~4.5MB en Vercel.
-            clientUploads: false,
-            addRandomSuffix: true,
-          }),
-        ]
-      : []),
+    // El importMap ya tiene stub de VercelBlobClientUploadHandler (clientUploads:false).
+    vercelBlobStorage({
+      enabled: Boolean(blobToken),
+      collections: {
+        media: true,
+      },
+      token: blobToken,
+      // clientUploads:true rompe el build de webpack (pino/worker_threads).
+      // Subidas por servidor OK hasta ~4.5MB en Vercel.
+      clientUploads: false,
+      addRandomSuffix: true,
+    }),
   ],
   localization: {
     locales: [
@@ -111,6 +111,6 @@ export default buildConfig({
     defaultLocale: 'es',
     fallback: true,
   },
-  cors: [process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'].filter(Boolean),
-  csrf: [process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'].filter(Boolean),
+  cors: [readEnv('NEXT_PUBLIC_SERVER_URL') || 'http://localhost:3000'].filter(Boolean),
+  csrf: [readEnv('NEXT_PUBLIC_SERVER_URL') || 'http://localhost:3000'].filter(Boolean),
 });
