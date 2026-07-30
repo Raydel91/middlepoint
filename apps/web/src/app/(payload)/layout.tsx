@@ -3,7 +3,6 @@ import { RootLayout, metadata, handleServerFunctions } from '@payloadcms/next/la
 import config from '@/payload.config';
 import { importMap } from './admin/importMap.js';
 import { supportInboxServerFunctions } from '@/lib/support-inbox-server-functions';
-import { PasswordRevealBoot } from '@/components/payload/PasswordRevealBoot';
 import '@payloadcms/next/css';
 import './custom.scss';
 
@@ -21,10 +20,14 @@ const serverFunction: ServerFunctionClient = async function (args) {
   });
 };
 
+/**
+ * Solo {children} dentro de RootLayout.
+ * Un hermano client (PasswordRevealBoot) hacía que en Vercel el slot de página
+ * llegara como null → admin en blanco (fondo cream sin login).
+ */
 export default function Layout({ children }: Args) {
   return (
     <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
-      <PasswordRevealBoot />
       {children}
     </RootLayout>
   );
