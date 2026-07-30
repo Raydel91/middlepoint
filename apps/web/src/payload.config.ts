@@ -92,8 +92,10 @@ export default buildConfig({
         media: true,
       },
       token: blobToken,
-      // Límite de body ~4.5MB en serverless; sube directo al Blob desde el admin.
-      clientUploads: true,
+      // clientUploads:true rompe el build de webpack (pino/worker_threads en el bundle cliente).
+      // Subidas por servidor OK hasta ~4.5MB en Vercel.
+      clientUploads: false,
+      addRandomSuffix: true,
     }),
   ],
   localization: {
