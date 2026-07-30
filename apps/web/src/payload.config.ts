@@ -1,5 +1,6 @@
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob';
 import path from 'path';
 import { buildConfig } from 'payload';
 import { fileURLToPath } from 'url';
@@ -21,6 +22,8 @@ import { SupportMessages } from './collections/SupportMessages';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
+
+const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
 
 export default buildConfig({
   admin: {
@@ -75,6 +78,18 @@ export default buildConfig({
     },
   }),
   sharp,
+  plugins: [
+    // En Vercel el disco es efímero; sin Blob las subidas de media fallan al guardar.
+    vercelBlobStorage({
+      enabled: Boolean(blobToken),
+      collections: {
+        media: true,
+      },
+      token: blobToken,
+      // Límite de body ~4.5MB en serverless; sube directo al Blob desde el admin.
+      clientUploads: true,
+    }),
+  ],
   localization: {
     locales: [
       { label: 'Español', code: 'es' },

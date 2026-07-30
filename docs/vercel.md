@@ -49,6 +49,13 @@ Actualiza también:
 - `NEXT_PUBLIC_SERVER_URL=https://middlepoint-khaki.vercel.app`
 - `AUTH_URL=https://middlepoint-khaki.vercel.app`
 
-## 5. Media / archivos
+## 5. Media / archivos (Vercel Blob)
 
-Uploads en disco local no persisten en serverless. Para producción planifica S3 (o compatible) con adaptador Payload.
+En Vercel el disco no persiste; hay que usar Blob:
+
+1. Proyecto en Vercel → **Storage** → **Create** → **Blob** (access: **public**).
+2. Conéctalo al proyecto; Vercel añade `BLOB_READ_WRITE_TOKEN`.
+3. Redeploy.
+
+Sin ese token, guardar categorías/productos con imagen falla.
+Localmente, sin token, sigue usándose la carpeta `media/` en disco.
