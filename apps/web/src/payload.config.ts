@@ -24,6 +24,12 @@ const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+const databaseUri =
+  process.env.DATABASE_URI ||
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL ||
+  '';
+
 
 export default buildConfig({
   admin: {
@@ -71,7 +77,7 @@ export default buildConfig({
     // Evita prompts interactivos de drizzle push que congelan el servidor en dev.
     push: process.env.PAYLOAD_DB_PUSH === 'true',
     pool: {
-      connectionString: process.env.DATABASE_URI || '',
+      connectionString: databaseUri,
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS) || 10000,

@@ -1,5 +1,5 @@
 /**
- * Crea/sincroniza el esquema de Payload en la BD de DATABASE_URI.
+ * Crea/sincroniza el esquema de Payload en la BD (DATABASE_URI o POSTGRES_URL).
  * Solo corre si PAYLOAD_DB_PUSH=true (p. ej. primer deploy en Vercel).
  *
  * Importante: @payloadcms/db-postgres solo ejecuta pushDevSchema cuando
@@ -11,10 +11,13 @@ if (process.env.PAYLOAD_DB_PUSH !== 'true') {
   process.exit(0);
 }
 
-if (!process.env.DATABASE_URI) {
-  console.error('Falta DATABASE_URI');
+const databaseUri =
+  process.env.DATABASE_URI || process.env.POSTGRES_URL || process.env.DATABASE_URL;
+if (!databaseUri) {
+  console.error('Falta DATABASE_URI o POSTGRES_URL');
   process.exit(1);
 }
+process.env.DATABASE_URI = databaseUri;
 if (!process.env.PAYLOAD_SECRET) {
   console.error('Falta PAYLOAD_SECRET');
   process.exit(1);
