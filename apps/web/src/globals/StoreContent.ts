@@ -291,13 +291,84 @@ const paymentGroup = {
   ],
 };
 
+const businessGroup = {
+  name: 'business',
+  type: 'group' as const,
+  label: 'Business Information',
+  admin: {
+    description: 'Datos de la empresa para SEO, footer y Schema.org Organization.',
+  },
+  fields: [
+    {
+      name: 'name',
+      type: 'text' as const,
+      label: 'Business Name',
+      defaultValue: 'Middle Point',
+    },
+    {
+      name: 'logo',
+      type: 'upload' as const,
+      relationTo: 'media' as const,
+      label: 'Business Logo',
+    },
+    {
+      name: 'email',
+      type: 'email' as const,
+      label: 'Business Email',
+      defaultValue: 'hello@tupuntomedio.com',
+    },
+    {
+      name: 'phone',
+      type: 'text' as const,
+      label: 'Business Phone',
+      defaultValue: '+1 (809) 123-4567',
+    },
+    {
+      name: 'whatsapp',
+      type: 'text' as const,
+      label: 'WhatsApp',
+      defaultValue: '+1 (829) 987-6543',
+    },
+    i18nText('address', 'Address'),
+    {
+      name: 'google_maps_url',
+      type: 'text' as const,
+      label: 'Google Maps URL',
+    },
+    {
+      name: 'instagram_corporate',
+      type: 'text' as const,
+      label: 'Instagram (Corporativo)',
+      defaultValue: 'https://instagram.com/tupuntomedio',
+    },
+    {
+      name: 'instagram_vita_green',
+      type: 'text' as const,
+      label: 'Instagram Vita Green',
+      defaultValue: 'https://instagram.com/tupuntomedio.vitagreen',
+    },
+    {
+      name: 'instagram_sweet_nice',
+      type: 'text' as const,
+      label: 'Instagram Sweet Nice',
+      defaultValue: 'https://instagram.com/tupuntomedio.sweetnice',
+    },
+    {
+      name: 'instagram_fit_meals',
+      type: 'text' as const,
+      label: 'Instagram Fit Meals',
+      defaultValue: 'https://instagram.com/tupuntomedio.fitmeals',
+    },
+  ],
+};
+
 export const StoreContent: GlobalConfig = {
   slug: 'store-content',
   label: 'Mensajes de la tienda',
   admin: {
     group: 'Contenido',
     description:
-      'Textos visibles en la tienda, organizados por pestañas: inicio, sobre nosotros, FAQ, legal, footer, menú, contacto y pagos. Los Instagram van por categoría.',
+      'Textos y datos del negocio. Instagram por marca en «Negocio»; cada categoría/producto también puede tener sus redes en Social Media.',
     hidden: ({ user }) => isAdminNavHidden(user?.role, 'store-content'),
   },
   access: {
@@ -306,8 +377,6 @@ export const StoreContent: GlobalConfig = {
       isAdminRole(user?.role) || isMarketingRole(user?.role),
   },
   hooks: {
-    // Tras guardar, invalida la caché de rutas para que los cambios se vean
-    // al instante en la tienda (inicio/productos usan revalidate 30-60s).
     afterChange: [
       async () => {
         try {
@@ -331,6 +400,7 @@ export const StoreContent: GlobalConfig = {
         { label: 'Menú', fields: [navGroup] },
         { label: 'Contacto', fields: [contactGroup] },
         { label: 'Pagos', fields: [paymentGroup] },
+        { label: 'Negocio', fields: [businessGroup] },
       ],
     },
   ],

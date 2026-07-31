@@ -9,18 +9,13 @@ export type SeoDoc = {
   meta_title?: I18nText
   meta_description?: I18nText
   keywords?: I18nText
-  canonical_url?: string | null
   og_title?: I18nText
   og_description?: I18nText
   og_image?: number | Media | null
-  twitter_title?: I18nText
-  twitter_description?: I18nText
-  twitter_image?: number | Media | null
   robots?: string | null
-  structured_data?: string | null
 } | null
 
-function siteOrigin(): string {
+export function siteOrigin(): string {
   return (
     process.env.NEXT_PUBLIC_SERVER_URL ||
     process.env.AUTH_URL ||
@@ -64,20 +59,14 @@ export function buildPageMetadata(args: {
   const keywords = pickSeo(seo?.keywords, locale)
   const ogTitle = pickSeo(seo?.og_title, locale, title) || title
   const ogDescription = pickSeo(seo?.og_description, locale, description)
-  const twitterTitle = pickSeo(seo?.twitter_title, locale, ogTitle) || ogTitle
-  const twitterDescription = pickSeo(seo?.twitter_description, locale, ogDescription)
 
   const ogImage =
     absoluteUrl(getMediaUrl(seo?.og_image)) || absoluteUrl(fallbackImageUrl)
-  const twitterImage =
-    absoluteUrl(getMediaUrl(seo?.twitter_image)) || ogImage
 
-  const canonical =
-    absoluteUrl(seo?.canonical_url?.trim() || undefined) || absoluteUrl(path)
+  const canonical = absoluteUrl(path)
 
-  const robotsRaw = seo?.robots?.trim() || 'index, follow'
+  const robotsRaw = seo?.robots?.trim() || 'index'
   const robotsIndex = !robotsRaw.includes('noindex')
-  const robotsFollow = !robotsRaw.includes('nofollow')
 
   return {
     title,
@@ -88,8 +77,8 @@ export function buildPageMetadata(args: {
       ...alternates,
     },
     robots: {
-      index: robotsIndex,
-      follow: robotsFollow,
+      index: robotsIndex && !robotsRaw.includes('noindex'),
+      follow: true,
     },
     openGraph: {
       title: ogTitle,
@@ -97,26 +86,16 @@ export function buildPageMetadata(args: {
       url: canonical,
       locale: locale === 'es' ? 'es_DO' : 'en_US',
       type: 'website',
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : undefined,
     },
+    // WhatsApp / otras apps también leen Open Graph; Twitter card reutiliza OG.
     twitter: {
-      card: twitterImage ? 'summary_large_image' : 'summary',
-      title: twitterTitle,
-      description: twitterDescription,
-      images: twitterImage ? [twitterImage] : undefined,
+      card: ogImage ? 'summary_large_image' : 'summary',
+      title: ogTitle,
+      description: ogDescription,
+      images: ogImage ? [ogImage] : undefined,
     },
   }
-}
-
-export function parseStructuredData(raw: string | null | undefined): object | null {
-  if (!raw?.trim()) return null
-  try {
-    const parsed = JSON.parse(raw) as unknown
-    if (parsed && typeof parsed === 'object') return parsed as object
-  } catch {
-    return null
-  }
-  return null
 }
 
 export function buildProductJsonLd(args: {
@@ -127,11 +106,7 @@ export function buildProductJsonLd(args: {
   price: number
   imageUrls: string[]
   currency?: string
-  seo?: SeoDoc
 }): object {
-  const custom = parseStructuredData(args.seo?.structured_data)
-  if (custom) return custom
-
   const url = absoluteUrl(`/${args.locale}/productos/${args.slug}`)
   return {
     '@context': 'https://schema.org',
@@ -156,11 +131,7 @@ export function buildCategoryJsonLd(args: {
   description?: string
   slug: string
   imageUrl?: string
-  seo?: SeoDoc
 }): object {
-  const custom = parseStructuredData(args.seo?.structured_data)
-  if (custom) return custom
-
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -168,6 +139,33 @@ export function buildCategoryJsonLd(args: {
     description: args.description,
     url: absoluteUrl(`/${args.locale}/categorias/${args.slug}`),
     image: args.imageUrl ? [args.imageUrl] : undefined,
+  }
+}
+
+export function buildOrganizationJsonLd(args: {
+  name: string
+  email?: string
+  phone?: string
+  address?: string
+  logoUrl?: string
+  sameAs?: string[]
+}): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: args.name,
+    email: args.email,
+    telephone: args.phone,
+    address: args.address
+      ? {
+          '@type': 'PostalAddress',
+          addressLocality: args.address,
+          addressCountry: 'DO',
+        }
+      : undefined,
+    logo: args.logoUrl,
+    url: siteOrigin(),
+    sameAs: args.sameAs?.filter(Boolean),
   }
 }
 

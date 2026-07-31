@@ -76,6 +76,16 @@ export type ResolvedStoreContent = {
     accounts: BankAccount[];
     instructions: string;
   };
+  business: {
+    name: string;
+    email: string;
+    phone: string;
+    whatsapp: string;
+    address: string;
+    googleMapsUrl: string;
+    instagramCorporate: string;
+    brandInstagram: Array<{ label: string; url: string }>;
+  };
 };
 
 const LEGAL_DEFAULTS = {
@@ -226,6 +236,18 @@ const DEFAULTS = {
       en: 'Send the payment receipt via WhatsApp including your order number.',
     },
   },
+  business: {
+    name: 'Middle Point',
+    email: FOOTER_CONFIG.contact.email,
+    phone: FOOTER_CONFIG.contact.phone,
+    whatsapp: FOOTER_CONFIG.contact.whatsapp,
+    address: FOOTER_CONFIG.contact.address,
+    google_maps_url: '',
+    instagram_corporate: 'https://instagram.com/tupuntomedio',
+    instagram_vita_green: 'https://instagram.com/tupuntomedio.vitagreen',
+    instagram_sweet_nice: 'https://instagram.com/tupuntomedio.sweetnice',
+    instagram_fit_meals: 'https://instagram.com/tupuntomedio.fitmeals',
+  },
 } as const;
 
 const ACCOUNT_TYPE_LABELS: Record<string, I18nGroup> = {
@@ -331,6 +353,7 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
   const nav = (doc?.nav ?? {}) as Record<string, I18nGroup | undefined>;
   const contact = (doc?.contact ?? {}) as Record<string, string | I18nGroup | undefined>;
   const payment = (doc?.payment ?? {}) as Record<string, unknown>;
+  const business = (doc?.business ?? {}) as Record<string, string | I18nGroup | undefined>;
 
   const whatsappDigits =
     (contact.whatsapp_digits as string) || DEFAULTS.contact.whatsapp_digits;
@@ -402,6 +425,41 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
         locale,
         DEFAULTS.payment.transfer_instructions,
       ),
+    },
+    business: {
+      name: (business.name as string) || DEFAULTS.business.name,
+      email: (business.email as string) || DEFAULTS.business.email,
+      phone: (business.phone as string) || DEFAULTS.business.phone,
+      whatsapp: (business.whatsapp as string) || DEFAULTS.business.whatsapp,
+      address: pickI18n(
+        business.address as I18nGroup,
+        locale,
+        DEFAULTS.business.address,
+      ),
+      googleMapsUrl:
+        (business.google_maps_url as string) || DEFAULTS.business.google_maps_url,
+      instagramCorporate:
+        (business.instagram_corporate as string) || DEFAULTS.business.instagram_corporate,
+      brandInstagram: [
+        {
+          label: 'Vita Green',
+          url:
+            (business.instagram_vita_green as string) ||
+            DEFAULTS.business.instagram_vita_green,
+        },
+        {
+          label: 'Sweet Nice',
+          url:
+            (business.instagram_sweet_nice as string) ||
+            DEFAULTS.business.instagram_sweet_nice,
+        },
+        {
+          label: 'Fit Meals',
+          url:
+            (business.instagram_fit_meals as string) ||
+            DEFAULTS.business.instagram_fit_meals,
+        },
+      ].filter((item) => Boolean(item.url?.trim())),
     },
   };
 });

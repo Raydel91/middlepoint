@@ -54,7 +54,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     ['users', 'orders', 'deliveries', 'settings'],
     ['read', 'update'],
   ),
-  marketing: buildPermissions(['users', 'marketing'], ['read', 'update']),
+  marketing: buildPermissions(
+    ['users', 'marketing', 'products', 'categories'],
+    ['read', 'update'],
+  ),
   cliente: buildPermissions(['orders'], ['create', 'read']),
   delivery: buildPermissions(['orders', 'deliveries'], ['read', 'update']),
 };
@@ -71,7 +74,7 @@ const ADMIN_NAV_BY_ROLE: Record<UserRole, AdminNavKey[] | 'all'> = {
     'customer-notifications',
     'support-messages',
   ],
-  marketing: ['users', 'reviews', 'store-content'],
+  marketing: ['users', 'reviews', 'store-content', 'products', 'categories', 'media'],
   delivery: ['users', 'orders'],
   cliente: [],
 };

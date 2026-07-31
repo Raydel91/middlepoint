@@ -68,7 +68,6 @@ export default async function ProductPage({ params }: Props) {
       slug: product.slug,
       price: product.precio,
       imageUrls,
-      seo: product.seo,
     });
 
     return (

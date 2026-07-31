@@ -12,6 +12,8 @@ import { default as default_e34c28bdc97e3fecf976b23b26d64cc9 } from '@/component
 import { default as default_fd19fc9f442b39f050b24cd26201991a } from '@/components/payload/AdminLogoutButton'
 import { default as default_1d4974d972a1a1fde4b7983de3c39f4c } from '@/components/payload/BeforeDashboard'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_a9a6bc6f87de87e63ea0c1c9d4b3e2f1 } from '@/components/payload/VercelBlobClientUploadHandler'
+import { SeoGooglePreview as SeoGooglePreview_b1c2d3e4f5a6789012345678abcdef01 } from '@/components/payload/SeoGooglePreview'
+import { SeoStructuredDataNote as SeoStructuredDataNote_c2d3e4f5a6789012345678abcdef012 } from '@/components/payload/SeoStructuredDataNote'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -30,5 +32,7 @@ export const importMap = {
   "@/components/payload/AdminLogoutButton#default": default_fd19fc9f442b39f050b24cd26201991a,
   "@/components/payload/BeforeDashboard#default": default_1d4974d972a1a1fde4b7983de3c39f4c,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_a9a6bc6f87de87e63ea0c1c9d4b3e2f1,
+  "@/components/payload/SeoGooglePreview#SeoGooglePreview": SeoGooglePreview_b1c2d3e4f5a6789012345678abcdef01,
+  "@/components/payload/SeoStructuredDataNote#SeoStructuredDataNote": SeoStructuredDataNote_c2d3e4f5a6789012345678abcdef012,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

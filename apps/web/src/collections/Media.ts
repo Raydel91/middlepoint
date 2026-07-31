@@ -20,7 +20,6 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'image/svg+xml', 'video/*', 'application/xml'],
   },
   access: {
-    // Marketing usa medios en «Mensajes de la tienda» aunque no esté en su menú.
     admin: ({ req: { user } }) =>
       canAccessAdminNav(user?.role, 'media') || isMarketingRole(user?.role),
     read: () => true,

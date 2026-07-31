@@ -272,11 +272,17 @@ export interface Category {
       en?: string | null;
     };
     twitter_image?: (number | null) | Media;
-    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow') | null;
+    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow' | 'index' | 'noindex') | null;
     /**
      * JSON-LD opcional. Si está vacío, la tienda genera automáticamente Product o CollectionPage.
      */
     structured_data?: string | null;
+  };
+  social?: {
+    instagram_url?: string | null;
+    facebook_url?: string | null;
+    whatsapp_url?: string | null;
+    tiktok_url?: string | null;
   };
   orden?: number | null;
   updatedAt: string;
@@ -359,11 +365,17 @@ export interface Product {
       en?: string | null;
     };
     twitter_image?: (number | null) | Media;
-    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow') | null;
+    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow' | 'index' | 'noindex') | null;
     /**
      * JSON-LD opcional. Si está vacío, la tienda genera automáticamente Product o CollectionPage.
      */
     structured_data?: string | null;
+  };
+  social?: {
+    instagram_url?: string | null;
+    facebook_url?: string | null;
+    whatsapp_url?: string | null;
+    tiktok_url?: string | null;
   };
   featured?: boolean | null;
   sales_count?: number | null;

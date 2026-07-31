@@ -53,7 +53,11 @@ describe('RBAC', () => {
     expect(canAccessAdminNav('operador', 'orders')).toBe(true);
     expect(canAccessAdminNav('operador', 'reviews')).toBe(false);
     expect(canAccessAdminNav('marketing', 'reviews')).toBe(true);
+    expect(canAccessAdminNav('marketing', 'products')).toBe(true);
+    expect(canAccessAdminNav('marketing', 'categories')).toBe(true);
     expect(canAccessAdminNav('marketing', 'orders')).toBe(false);
+    expect(canAccess('marketing', 'products', 'update')).toBe(true);
+    expect(canAccess('marketing', 'products', 'create')).toBe(false);
     expect(canAccessAdminNav('cliente', 'users')).toBe(false);
     expect(isAdminNavHidden('delivery', 'settings')).toBe(true);
   });

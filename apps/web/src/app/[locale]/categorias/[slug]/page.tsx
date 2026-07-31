@@ -40,7 +40,6 @@ export default async function CategoryPage({ params }: Props) {
     description,
     slug: category.slug,
     imageUrl: imagenUrl,
-    seo: category.seo,
   });
 
   return (
@@ -69,9 +68,9 @@ export default async function CategoryPage({ params }: Props) {
             {description}
           </p>
         )}
-        {category.instagram_url && (
+        { (category.social?.instagram_url || category.instagram_url) && (
           <a
-            href={category.instagram_url}
+            href={category.social?.instagram_url || category.instagram_url || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 inline-flex items-center gap-2.5 text-sm font-medium text-primary transition hover:underline"

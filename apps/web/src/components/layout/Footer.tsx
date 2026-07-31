@@ -51,11 +51,18 @@ function FooterLink({
 
 export async function Footer() {
   const locale = (await getLocale()) as Locale;
-  const [content, instagramLinks] = await Promise.all([
+  const [content, categoryInstagram] = await Promise.all([
     getStoreContent(locale),
     getCategoryInstagramLinks(locale),
   ]);
   const year = new Date().getFullYear();
+  const instagramLinks =
+    content.business.brandInstagram.length > 0
+      ? content.business.brandInstagram.map((item) => ({
+          ...item,
+          slug: item.label,
+        }))
+      : categoryInstagram;
   const gridCols = instagramLinks.length > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4';
 
   return (
