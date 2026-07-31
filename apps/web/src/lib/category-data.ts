@@ -73,29 +73,3 @@ export async function getCategoryMetadata(slug: string, locale: Locale) {
     },
   });
 }
-
-/** Categorías con Instagram para el footer (social o campo legacy). */
-export const getCategoryInstagramLinks = cache(async (locale: Locale) => {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: 'categories',
-    sort: 'orden',
-    limit: 20,
-    depth: 0,
-    select: { nombre: true, instagram_url: true, social: true, slug: true },
-  });
-
-  return result.docs
-    .map((cat) => {
-      const url =
-        (cat as { social?: { instagram_url?: string | null } }).social?.instagram_url?.trim() ||
-        cat.instagram_url?.trim() ||
-        '';
-      return {
-        label: getI18nValue(cat.nombre, locale),
-        url,
-        slug: cat.slug,
-      };
-    })
-    .filter((item) => Boolean(item.url));
-});

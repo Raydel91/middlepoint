@@ -2,10 +2,9 @@ import Image from 'next/image';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getStoreContent } from '@/lib/store-content';
-import { getCategoryInstagramLinks } from '@/lib/category-data';
 import { FOOTER_CONFIG } from '@/lib/footer-config';
 import type { Locale } from '@middlepoint/shared';
-import { Instagram, Mail, MapPin, Phone, ExternalLink } from 'lucide-react';
+import { Mail, MapPin, Phone, ExternalLink } from 'lucide-react';
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -51,24 +50,13 @@ function FooterLink({
 
 export async function Footer() {
   const locale = (await getLocale()) as Locale;
-  const [content, categoryInstagram] = await Promise.all([
-    getStoreContent(locale),
-    getCategoryInstagramLinks(locale),
-  ]);
+  const content = await getStoreContent(locale);
   const year = new Date().getFullYear();
-  const instagramLinks =
-    content.business.brandInstagram.length > 0
-      ? content.business.brandInstagram.map((item) => ({
-          ...item,
-          slug: item.label,
-        }))
-      : categoryInstagram;
-  const gridCols = instagramLinks.length > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4';
 
   return (
     <footer className="mt-auto border-t border-primary/15 bg-background text-secondary">
       <div className="mx-auto max-w-7xl px-4 py-12 lg:py-14">
-        <div className={`grid grid-cols-1 gap-10 sm:grid-cols-2 ${gridCols} lg:gap-8`}>
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block">
               <Image
@@ -162,27 +150,6 @@ export async function Footer() {
               </li>
             </ul>
           </div>
-
-          {instagramLinks.length > 0 && (
-            <div>
-              <FooterHeading>{content.nav.instagramHeading}</FooterHeading>
-              <ul className="space-y-2.5">
-                {instagramLinks.map((item) => (
-                  <li key={item.slug}>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-secondary/80 transition hover:text-primary"
-                    >
-                      <Instagram size={14} className="shrink-0 text-primary" />
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         <div className="mt-10 border-t border-primary/15 pt-6">
