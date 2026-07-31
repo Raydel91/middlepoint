@@ -6,10 +6,20 @@ import type { Adapter } from '@payloadcms/plugin-cloud-storage/types'
 import { del, head, put } from '@vercel/blob'
 
 /** Acceso que Next no puede inlinear en build (vars Sensitive solo existen en runtime). */
-function runtimeEnv(name: string): string | undefined {
+export function runtimeEnv(name: string): string | undefined {
   const value = process['env'][name]
   const trimmed = typeof value === 'string' ? value.trim() : ''
   return trimmed || undefined
+}
+
+export function blobStorageDiagnostics() {
+  return {
+    vercel: runtimeEnv('VERCEL') === '1',
+    nodeEnv: runtimeEnv('NODE_ENV') ?? null,
+    hasBlobToken: Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN')),
+    hasBlobStoreId: Boolean(runtimeEnv('BLOB_STORE_ID')),
+    blobTokenPrefix: runtimeEnv('BLOB_READ_WRITE_TOKEN')?.startsWith('vercel_blob_rw_') ?? false,
+  }
 }
 
 function resolveBlobBaseUrl(): string | undefined {
@@ -41,7 +51,6 @@ function buildFileUrl(args: {
 /**
  * Adaptador Blob que NO pasa `token` a `@vercel/blob`.
  * Así el SDK lee `BLOB_READ_WRITE_TOKEN` en runtime (incluye vars Sensitive de Vercel).
- * El plugin oficial se desactiva si el token falta en el build → mkdir local `media` y 500.
  */
 const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
   name: 'vercel-blob',
@@ -55,6 +64,12 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
     })
   },
   handleUpload: async ({ data, file }) => {
+    if (!runtimeEnv('BLOB_READ_WRITE_TOKEN')) {
+      throw new Error(
+        'BLOB_READ_WRITE_TOKEN no está disponible en runtime. En Vercel: Storage → Blob conectado, variable en Production, Redeploy.',
+      )
+    }
+
     const { fileKey } = getFileKey({
       collectionPrefix: prefix,
       docPrefix: data.prefix,
@@ -62,7 +77,6 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
       useCompositePrefixes: false,
     })
 
-    // Sin `token`: getTokenFromOptionsOrEnv lee process.env en el momento del upload.
     const result = await put(fileKey, file.buffer, {
       access: 'public',
       addRandomSuffix: true,
@@ -89,7 +103,7 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
       }),
     )
   },
-  staticHandler: async (req, { headers: incomingHeaders, params: { filename, prefix: prefixQueryParam } }) => {
+  staticHandler: async (_req, { headers: incomingHeaders, params: { filename, prefix: prefixQueryParam } }) => {
     const baseUrl = resolveBlobBaseUrl()
     if (!baseUrl) {
       return new Response('Blob storage is not configured', { status: 500 })
@@ -120,10 +134,14 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
   },
 })
 
+/**
+ * En Vercel/production siempre registramos el adaptador (evita mkdir local `media`).
+ * Localmente solo si hay token en `.env`.
+ */
 export function shouldUseVercelBlobStorage(): boolean {
-  // VERCEL=1 siempre existe en Vercel (no es Sensitive) → activamos el adaptador
-  // aunque BLOB_READ_WRITE_TOKEN solo exista en runtime.
-  return runtimeEnv('VERCEL') === '1' || Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN'))
+  if (runtimeEnv('VERCEL') === '1') return true
+  if (runtimeEnv('NODE_ENV') === 'production') return true
+  return Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN'))
 }
 
 export function vercelBlobStorageFromEnv(): (config: Config) => Config {

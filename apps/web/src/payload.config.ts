@@ -90,8 +90,8 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
-    // En Vercel: adaptador que lee BLOB_READ_WRITE_TOKEN en runtime (Sensitive OK).
-    // Localmente sin token: disco `media/`.
+    // Siempre registrar el factory; shouldUse evita activarlo en dev local sin token.
+    // En Vercel/production: adaptador Blob (token Sensitive se lee en runtime al subir).
     ...(shouldUseVercelBlobStorage() ? [vercelBlobStorageFromEnv()] : []),
   ],
   localization: {
