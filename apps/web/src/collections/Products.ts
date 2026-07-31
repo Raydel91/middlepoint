@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { canAccessAdminNav, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
+import { seoGroup } from '../fields/seo';
 
 const i18nField = (name: string, required = true) => ({
   name,
@@ -27,62 +28,81 @@ export const Products: CollectionConfig = {
     delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
-    i18nField('nombre'),
-    i18nField('descripcion'),
-    i18nField('ingredientes', false),
     {
-      name: 'slug',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-    },
-    {
-      name: 'precio',
-      type: 'number',
-      required: true,
-      min: 0,
-    },
-    {
-      name: 'calorias',
-      type: 'number',
-      min: 0,
-    },
-    {
-      name: 'categoria',
-      type: 'relationship',
-      relationTo: 'categories',
-      required: true,
-    },
-    {
-      name: 'galeria',
-      type: 'upload',
-      relationTo: 'media',
-      hasMany: true,
-      label: 'Galería',
-      admin: {
-        description: 'Hasta 5 imágenes o videos para el producto.',
-      },
-      validate: (value) => {
-        if (Array.isArray(value) && value.length > 5) {
-          return 'Puedes subir un máximo de 5 imágenes o videos.';
-        }
-        return true;
-      },
-    },
-    {
-      name: 'imagen',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        hidden: true,
-        description: 'Campo legado. Usa Galería.',
-      },
-    },
-    {
-      name: 'atributos',
-      type: 'json',
-      defaultValue: {},
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'General',
+          fields: [
+            i18nField('nombre'),
+            i18nField('descripcion'),
+            i18nField('ingredientes', false),
+            {
+              name: 'slug',
+              type: 'text',
+              required: true,
+              unique: true,
+              index: true,
+            },
+            {
+              name: 'precio',
+              type: 'number',
+              required: true,
+              min: 0,
+            },
+            {
+              name: 'calorias',
+              type: 'number',
+              min: 0,
+            },
+            {
+              name: 'categoria',
+              type: 'relationship',
+              relationTo: 'categories',
+              required: true,
+            },
+            {
+              name: 'atributos',
+              type: 'json',
+              defaultValue: {},
+            },
+          ],
+        },
+        {
+          label: 'Galería',
+          fields: [
+            {
+              name: 'galeria',
+              type: 'upload',
+              relationTo: 'media',
+              hasMany: true,
+              label: 'Galería',
+              admin: {
+                description: 'Hasta 5 imágenes o videos para el producto.',
+              },
+              validate: (value) => {
+                if (Array.isArray(value) && value.length > 5) {
+                  return 'Puedes subir un máximo de 5 imágenes o videos.';
+                }
+                return true;
+              },
+            },
+            {
+              name: 'imagen',
+              type: 'upload',
+              relationTo: 'media',
+              admin: {
+                hidden: true,
+                description: 'Campo legado. Usa Galería.',
+              },
+            },
+          ],
+        },
+        {
+          label: 'SEO',
+          fields: [seoGroup],
+        },
+      ],
     },
     {
       name: 'featured',

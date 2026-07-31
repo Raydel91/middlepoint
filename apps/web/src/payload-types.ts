@@ -230,7 +230,54 @@ export interface Category {
   };
   slug: string;
   imagen?: (number | null) | Media;
+  /**
+   * Cuenta Instagram de esta categoría (aparece en la página de categoría y en el footer).
+   */
   instagram_url?: string | null;
+  /**
+   * Optimización para buscadores y redes. Si dejas un campo vacío, se usan el nombre y la descripción del registro.
+   */
+  seo?: {
+    meta_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    meta_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    keywords?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    /**
+     * Opcional. Si está vacío se usa la URL de esta página.
+     */
+    canonical_url?: string | null;
+    og_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    og_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    og_image?: (number | null) | Media;
+    twitter_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    twitter_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    twitter_image?: (number | null) | Media;
+    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow') | null;
+    /**
+     * JSON-LD opcional. Si está vacío, la tienda genera automáticamente Product o CollectionPage.
+     */
+    structured_data?: string | null;
+  };
   orden?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -274,6 +321,50 @@ export interface Product {
     | number
     | boolean
     | null;
+  /**
+   * Optimización para buscadores y redes. Si dejas un campo vacío, se usan el nombre y la descripción del registro.
+   */
+  seo?: {
+    meta_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    meta_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    keywords?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    /**
+     * Opcional. Si está vacío se usa la URL de esta página.
+     */
+    canonical_url?: string | null;
+    og_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    og_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    og_image?: (number | null) | Media;
+    twitter_title?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    twitter_description?: {
+      es?: string | null;
+      en?: string | null;
+    };
+    twitter_image?: (number | null) | Media;
+    robots?: ('index, follow' | 'noindex, follow' | 'noindex, nofollow') | null;
+    /**
+     * JSON-LD opcional. Si está vacío, la tienda genera automáticamente Product o CollectionPage.
+     */
+    structured_data?: string | null;
+  };
   featured?: boolean | null;
   sales_count?: number | null;
   view_count?: number | null;
@@ -648,6 +739,57 @@ export interface CategoriesSelect<T extends boolean = true> {
   slug?: T;
   imagen?: T;
   instagram_url?: T;
+  seo?:
+    | T
+    | {
+        meta_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        meta_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        keywords?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        canonical_url?: T;
+        og_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        og_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        og_image?: T;
+        twitter_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        twitter_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        twitter_image?: T;
+        robots?: T;
+        structured_data?: T;
+      };
   orden?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -682,6 +824,57 @@ export interface ProductsSelect<T extends boolean = true> {
   galeria?: T;
   imagen?: T;
   atributos?: T;
+  seo?:
+    | T
+    | {
+        meta_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        meta_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        keywords?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        canonical_url?: T;
+        og_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        og_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        og_image?: T;
+        twitter_title?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        twitter_description?:
+          | T
+          | {
+              es?: T;
+              en?: T;
+            };
+        twitter_image?: T;
+        robots?: T;
+        structured_data?: T;
+      };
   featured?: T;
   sales_count?: T;
   view_count?: T;
@@ -1121,20 +1314,6 @@ export interface StoreContent {
       en?: string | null;
     };
   };
-  instagram?: {
-    vita_green?: {
-      label?: string | null;
-      url?: string | null;
-    };
-    sweet_nice?: {
-      label?: string | null;
-      url?: string | null;
-    };
-    fit_meals?: {
-      label?: string | null;
-      url?: string | null;
-    };
-  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1460,28 +1639,6 @@ export interface StoreContentSelect<T extends boolean = true> {
           | {
               es?: T;
               en?: T;
-            };
-      };
-  instagram?:
-    | T
-    | {
-        vita_green?:
-          | T
-          | {
-              label?: T;
-              url?: T;
-            };
-        sweet_nice?:
-          | T
-          | {
-              label?: T;
-              url?: T;
-            };
-        fit_meals?:
-          | T
-          | {
-              label?: T;
-              url?: T;
             };
       };
   updatedAt?: T;

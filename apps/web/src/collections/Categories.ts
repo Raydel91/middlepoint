@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { canAccessAdminNav, isAdminNavHidden, isAdminRole } from '@middlepoint/shared';
+import { seoGroup } from '../fields/seo';
 
 const i18nField = (name: string, required = true) => ({
   name,
@@ -27,21 +28,43 @@ export const Categories: CollectionConfig = {
     delete: ({ req: { user } }) => isAdminRole(user?.role),
   },
   fields: [
-    i18nField('nombre'),
-    i18nField('descripcion', false),
     {
-      name: 'slug',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'General',
+          fields: [
+            i18nField('nombre'),
+            i18nField('descripcion', false),
+            {
+              name: 'slug',
+              type: 'text',
+              required: true,
+              unique: true,
+              index: true,
+            },
+            {
+              name: 'imagen',
+              type: 'upload',
+              relationTo: 'media',
+            },
+            {
+              name: 'instagram_url',
+              type: 'text',
+              label: 'URL de Instagram',
+              admin: {
+                description:
+                  'Cuenta Instagram de esta categoría (aparece en la página de categoría y en el footer).',
+              },
+            },
+          ],
+        },
+        {
+          label: 'SEO',
+          fields: [seoGroup],
+        },
+      ],
     },
-    {
-      name: 'imagen',
-      type: 'upload',
-      relationTo: 'media',
-    },
-    { name: 'instagram_url', type: 'text', label: 'URL de Instagram' },
     {
       name: 'orden',
       type: 'number',

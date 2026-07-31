@@ -72,7 +72,6 @@ export type ResolvedStoreContent = {
     address: string;
     orderConfirmationWhatsapp: string;
   };
-  instagram: Array<{ label: string; url: string }>;
   payment: {
     accounts: BankAccount[];
     instructions: string;
@@ -210,11 +209,6 @@ const DEFAULTS = {
       en: 'Hi, I would like more information about Your Middle Point',
     },
   },
-  instagram: {
-    vita_green: FOOTER_CONFIG.instagram.vitaGreen,
-    sweet_nice: FOOTER_CONFIG.instagram.sweetNice,
-    fit_meals: FOOTER_CONFIG.instagram.fitMeals,
-  },
   payment: {
     accounts: [
       {
@@ -337,7 +331,6 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
   const nav = (doc?.nav ?? {}) as Record<string, I18nGroup | undefined>;
   const contact = (doc?.contact ?? {}) as Record<string, string | I18nGroup | undefined>;
   const payment = (doc?.payment ?? {}) as Record<string, unknown>;
-  const instagram = (doc?.instagram ?? {}) as Record<string, { label?: string; url?: string }>;
 
   const whatsappDigits =
     (contact.whatsapp_digits as string) || DEFAULTS.contact.whatsapp_digits;
@@ -402,20 +395,6 @@ export const getStoreContent = cache(async (locale: Locale): Promise<ResolvedSto
         (contact.order_confirmation_whatsapp as string) ||
         DEFAULTS.contact.order_confirmation_whatsapp,
     },
-    instagram: [
-      {
-        label: instagram.vita_green?.label || DEFAULTS.instagram.vita_green.label,
-        url: instagram.vita_green?.url || DEFAULTS.instagram.vita_green.url,
-      },
-      {
-        label: instagram.sweet_nice?.label || DEFAULTS.instagram.sweet_nice.label,
-        url: instagram.sweet_nice?.url || DEFAULTS.instagram.sweet_nice.url,
-      },
-      {
-        label: instagram.fit_meals?.label || DEFAULTS.instagram.fit_meals.label,
-        url: instagram.fit_meals?.url || DEFAULTS.instagram.fit_meals.url,
-      },
-    ],
     payment: {
       accounts: paymentAccounts,
       instructions: pickI18n(

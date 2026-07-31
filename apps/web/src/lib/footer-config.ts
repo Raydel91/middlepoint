@@ -20,20 +20,6 @@ export const FOOTER_CONFIG = {
   legal: {
     rnc: 'RNC: 1-31-00000-0',
   },
-  instagram: {
-    vitaGreen: {
-      label: 'Vita Green',
-      url: 'https://instagram.com/tupuntomedio.vitagreen',
-    },
-    sweetNice: {
-      label: 'Sweet Nice',
-      url: 'https://instagram.com/tupuntomedio.sweetnice',
-    },
-    fitMeals: {
-      label: 'Fit Meals',
-      url: 'https://instagram.com/tupuntomedio.fitmeals',
-    },
-  },
   developer: {
     name: 'R&M Automatic Solutions',
     url: 'https://rymautomaticsolutions.com',

@@ -5,6 +5,11 @@ import { getI18nValue, type Locale } from '@middlepoint/shared';
 import { resolveProductGallery } from '@/lib/media';
 import { getProductPageData } from '@/lib/product-data';
 import { getServices } from '@/lib/payload';
+import {
+  buildPageMetadata,
+  buildProductJsonLd,
+  JsonLdScript,
+} from '@/lib/seo';
 import type { Metadata } from 'next';
 
 export const revalidate = 60;
@@ -19,13 +24,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const services = await getServices();
     const product = await services.product.getBySlug(slug);
     if (!product) return { title: 'Producto no encontrado' };
-    return {
-      title: getI18nValue(product.nombre, locale as Locale),
-      description: getI18nValue(product.descripcion, locale as Locale),
+
+    const name = getI18nValue(product.nombre, locale as Locale);
+    const description = getI18nValue(product.descripcion, locale as Locale);
+    const gallery = resolveProductGallery(product);
+    const fallbackImage =
+      gallery.find((item) => !item.mimeType?.startsWith('video/'))?.url || gallery[0]?.url;
+
+    return buildPageMetadata({
+      locale: locale as Locale,
+      seo: product.seo,
+      fallbackTitle: name,
+      fallbackDescription: description,
+      fallbackImageUrl: fallbackImage,
+      path: `/${locale}/productos/${slug}`,
       alternates: {
         languages: { es: `/es/productos/${slug}`, en: `/en/productos/${slug}` },
       },
-    };
+    });
   } catch {
     return { title: slug };
   }
@@ -40,12 +56,27 @@ export default async function ProductPage({ params }: Props) {
     if (!data) notFound();
 
     const { product, related } = data;
+    const name = getI18nValue(product.nombre, locale as Locale);
+    const description = getI18nValue(product.descripcion, locale as Locale);
+    const gallery = resolveProductGallery(product);
+    const imageUrls = gallery.map((item) => item.url).filter(Boolean);
+
+    const jsonLd = buildProductJsonLd({
+      locale: locale as Locale,
+      name,
+      description,
+      slug: product.slug,
+      price: product.precio,
+      imageUrls,
+      seo: product.seo,
+    });
 
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
+        <JsonLdScript data={jsonLd} />
         <ProductDetail
           product={product as Parameters<typeof ProductDetail>[0]['product']}
-          gallery={resolveProductGallery(product)}
+          gallery={gallery}
           related={related as Parameters<typeof ProductDetail>[0]['related']}
         />
       </div>

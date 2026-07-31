@@ -2,9 +2,10 @@ import Image from 'next/image';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { getStoreContent } from '@/lib/store-content';
+import { getCategoryInstagramLinks } from '@/lib/category-data';
 import { FOOTER_CONFIG } from '@/lib/footer-config';
 import type { Locale } from '@middlepoint/shared';
-import { Mail, MapPin, Phone, ExternalLink } from 'lucide-react';
+import { Instagram, Mail, MapPin, Phone, ExternalLink } from 'lucide-react';
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -50,13 +51,17 @@ function FooterLink({
 
 export async function Footer() {
   const locale = (await getLocale()) as Locale;
-  const content = await getStoreContent(locale);
+  const [content, instagramLinks] = await Promise.all([
+    getStoreContent(locale),
+    getCategoryInstagramLinks(locale),
+  ]);
   const year = new Date().getFullYear();
+  const gridCols = instagramLinks.length > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4';
 
   return (
     <footer className="mt-auto border-t border-primary/15 bg-background text-secondary">
       <div className="mx-auto max-w-7xl px-4 py-12 lg:py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+        <div className={`grid grid-cols-1 gap-10 sm:grid-cols-2 ${gridCols} lg:gap-8`}>
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block">
               <Image
@@ -73,12 +78,24 @@ export async function Footer() {
           <div>
             <FooterHeading>{content.nav.quickNavHeading}</FooterHeading>
             <ul className="space-y-2.5">
-              <li><FooterLink href="/">{content.nav.home}</FooterLink></li>
-              <li><FooterLink href="/productos">{content.nav.shop}</FooterLink></li>
-              <li><FooterLink href="/productos">{content.nav.categories}</FooterLink></li>
-              <li><FooterLink href="/sobre-nosotros">{content.nav.about}</FooterLink></li>
-              <li><FooterLink href="/cuenta">{content.nav.account}</FooterLink></li>
-              <li><FooterLink href="/faq">{content.nav.faq}</FooterLink></li>
+              <li>
+                <FooterLink href="/">{content.nav.home}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/productos">{content.nav.shop}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/productos">{content.nav.categories}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/sobre-nosotros">{content.nav.about}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/cuenta">{content.nav.account}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/faq">{content.nav.faq}</FooterLink>
+              </li>
             </ul>
           </div>
 
@@ -88,9 +105,15 @@ export async function Footer() {
               <li>
                 <span className="text-sm font-medium text-secondary/90">{content.footer.rnc}</span>
               </li>
-              <li><FooterLink href="/legal/terminos">{content.nav.terms}</FooterLink></li>
-              <li><FooterLink href="/legal/privacidad">{content.nav.privacy}</FooterLink></li>
-              <li><FooterLink href="/legal/devoluciones">{content.nav.returns}</FooterLink></li>
+              <li>
+                <FooterLink href="/legal/terminos">{content.nav.terms}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/legal/privacidad">{content.nav.privacy}</FooterLink>
+              </li>
+              <li>
+                <FooterLink href="/legal/devoluciones">{content.nav.returns}</FooterLink>
+              </li>
             </ul>
           </div>
 
@@ -132,6 +155,27 @@ export async function Footer() {
               </li>
             </ul>
           </div>
+
+          {instagramLinks.length > 0 && (
+            <div>
+              <FooterHeading>{content.nav.instagramHeading}</FooterHeading>
+              <ul className="space-y-2.5">
+                {instagramLinks.map((item) => (
+                  <li key={item.slug}>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-secondary/80 transition hover:text-primary"
+                    >
+                      <Instagram size={14} className="shrink-0 text-primary" />
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="mt-10 border-t border-primary/15 pt-6">

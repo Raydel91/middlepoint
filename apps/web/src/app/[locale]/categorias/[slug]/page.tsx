@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { getI18nValue, type Locale } from '@middlepoint/shared';
 import { getCategoryImageUrl, getProductCardImageUrl } from '@/lib/media';
 import { getCategoryPageData, getCategoryMetadata } from '@/lib/category-data';
+import { buildCategoryJsonLd, JsonLdScript } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { Instagram } from 'lucide-react';
 
@@ -33,9 +34,18 @@ export default async function CategoryPage({ params }: Props) {
   const name = getI18nValue(category.nombre, locale as Locale);
   const description = getI18nValue(category.descripcion, locale as Locale);
   const imagenUrl = getCategoryImageUrl(category.imagen);
+  const jsonLd = buildCategoryJsonLd({
+    locale: locale as Locale,
+    name,
+    description,
+    slug: category.slug,
+    imageUrl: imagenUrl,
+    seo: category.seo,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <JsonLdScript data={jsonLd} />
       <header className="mb-8">
         <div className="flex items-center justify-between gap-6">
           <h1 className="font-secondary text-3xl font-bold text-secondary md:text-4xl">

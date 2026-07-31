@@ -158,7 +158,7 @@ const navGroup = {
     i18nText('contact_heading', 'Título columna contacto'),
     i18nText('quick_nav_heading', 'Título navegación rápida'),
     i18nText('legal_heading', 'Título columna legal'),
-    i18nText('instagram_heading', 'Título Instagram'),
+    i18nText('instagram_heading', 'Título Instagram (footer)'),
   ],
 };
 
@@ -291,60 +291,13 @@ const paymentGroup = {
   ],
 };
 
-const instagramGroup = {
-  name: 'instagram',
-  type: 'group' as const,
-  label: 'Instagram por categoría',
-  fields: [
-    {
-      name: 'vita_green',
-      type: 'group' as const,
-      label: 'Vita Green',
-      fields: [
-        { name: 'label', type: 'text' as const, defaultValue: 'Vita Green' },
-        {
-          name: 'url',
-          type: 'text' as const,
-          defaultValue: 'https://instagram.com/tupuntomedio.vitagreen',
-        },
-      ],
-    },
-    {
-      name: 'sweet_nice',
-      type: 'group' as const,
-      label: 'Sweet Nice',
-      fields: [
-        { name: 'label', type: 'text' as const, defaultValue: 'Sweet Nice' },
-        {
-          name: 'url',
-          type: 'text' as const,
-          defaultValue: 'https://instagram.com/tupuntomedio.sweetnice',
-        },
-      ],
-    },
-    {
-      name: 'fit_meals',
-      type: 'group' as const,
-      label: 'Fit Meals',
-      fields: [
-        { name: 'label', type: 'text' as const, defaultValue: 'Fit Meals' },
-        {
-          name: 'url',
-          type: 'text' as const,
-          defaultValue: 'https://instagram.com/tupuntomedio.fitmeals',
-        },
-      ],
-    },
-  ],
-};
-
 export const StoreContent: GlobalConfig = {
   slug: 'store-content',
   label: 'Mensajes de la tienda',
   admin: {
     group: 'Contenido',
     description:
-      'Textos visibles en la tienda, organizados por pestañas: inicio, sobre nosotros, FAQ, legal, footer, menú, contacto, pagos e Instagram.',
+      'Textos visibles en la tienda, organizados por pestañas: inicio, sobre nosotros, FAQ, legal, footer, menú, contacto y pagos. Los Instagram van por categoría.',
     hidden: ({ user }) => isAdminNavHidden(user?.role, 'store-content'),
   },
   access: {
@@ -378,7 +331,6 @@ export const StoreContent: GlobalConfig = {
         { label: 'Menú', fields: [navGroup] },
         { label: 'Contacto', fields: [contactGroup] },
         { label: 'Pagos', fields: [paymentGroup] },
-        { label: 'Instagram', fields: [instagramGroup] },
       ],
     },
   ],
