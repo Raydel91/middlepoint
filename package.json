@@ -18,5 +18,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "overrides": {
+    "@vercel/blob": "2.6.1"
   }
 }

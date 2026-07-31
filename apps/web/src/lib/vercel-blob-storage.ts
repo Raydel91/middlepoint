@@ -12,20 +12,32 @@ export function runtimeEnv(name: string): string | undefined {
   return trimmed || undefined
 }
 
+function normalizeStoreId(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  const cleaned = raw.replace(/^store_/i, '').toLowerCase()
+  return cleaned || undefined
+}
+
 export function blobStorageDiagnostics() {
+  const hasBlobToken = Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN'))
+  const hasBlobStoreId = Boolean(runtimeEnv('BLOB_STORE_ID'))
+  const hasOidcToken = Boolean(runtimeEnv('VERCEL_OIDC_TOKEN'))
   return {
     vercel: runtimeEnv('VERCEL') === '1',
     nodeEnv: runtimeEnv('NODE_ENV') ?? null,
-    hasBlobToken: Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN')),
-    hasBlobStoreId: Boolean(runtimeEnv('BLOB_STORE_ID')),
+    hasBlobToken,
+    hasBlobStoreId,
+    hasOidcToken,
     blobTokenPrefix: runtimeEnv('BLOB_READ_WRITE_TOKEN')?.startsWith('vercel_blob_rw_') ?? false,
+    // En Vercel basta OIDC + store id (no hace falta BLOB_READ_WRITE_TOKEN).
+    canUpload: hasBlobToken || (hasBlobStoreId && (hasOidcToken || runtimeEnv('VERCEL') === '1')),
   }
 }
 
 function resolveBlobBaseUrl(): string | undefined {
   const token = runtimeEnv('BLOB_READ_WRITE_TOKEN')
   const fromToken = token?.match(/^vercel_blob_rw_([a-z\d]+)_[a-z\d]+$/i)?.[1]
-  const storeId = (fromToken || runtimeEnv('BLOB_STORE_ID') || '').toLowerCase()
+  const storeId = normalizeStoreId(fromToken || runtimeEnv('BLOB_STORE_ID'))
   if (!storeId) return undefined
   return `https://${storeId}.public.blob.vercel-storage.com`
 }
@@ -49,8 +61,9 @@ function buildFileUrl(args: {
 }
 
 /**
- * Adaptador Blob que NO pasa `token` a `@vercel/blob`.
- * Así el SDK lee `BLOB_READ_WRITE_TOKEN` en runtime (incluye vars Sensitive de Vercel).
+ * Adaptador Blob sin pasar `token` explícito.
+ * @vercel/blob ≥2.6 usa OIDC (`BLOB_STORE_ID` + `VERCEL_OIDC_TOKEN`) en Vercel;
+ * si existe `BLOB_READ_WRITE_TOKEN`, también lo usa como fallback.
  */
 const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
   name: 'vercel-blob',
@@ -64,9 +77,10 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
     })
   },
   handleUpload: async ({ data, file }) => {
-    if (!runtimeEnv('BLOB_READ_WRITE_TOKEN')) {
+    const diag = blobStorageDiagnostics()
+    if (!diag.canUpload) {
       throw new Error(
-        'BLOB_READ_WRITE_TOKEN no está disponible en runtime. En Vercel: Storage → Blob conectado, variable en Production, Redeploy.',
+        'Blob no autenticado: falta BLOB_STORE_ID (OIDC) o BLOB_READ_WRITE_TOKEN. Conecta Storage → Blob al proyecto y redeploy.',
       )
     }
 
@@ -136,12 +150,12 @@ const createRuntimeVercelBlobAdapter: Adapter = ({ prefix = '' }) => ({
 
 /**
  * En Vercel/production siempre registramos el adaptador (evita mkdir local `media`).
- * Localmente solo si hay token en `.env`.
+ * Localmente: token RW o store id en `.env`.
  */
 export function shouldUseVercelBlobStorage(): boolean {
   if (runtimeEnv('VERCEL') === '1') return true
   if (runtimeEnv('NODE_ENV') === 'production') return true
-  return Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN'))
+  return Boolean(runtimeEnv('BLOB_READ_WRITE_TOKEN') || runtimeEnv('BLOB_STORE_ID'))
 }
 
 export function vercelBlobStorageFromEnv(): (config: Config) => Config {

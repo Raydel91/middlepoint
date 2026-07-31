@@ -24,7 +24,7 @@
     "@payloadcms/richtext-lexical": "^3.85.0",
     "@payloadcms/storage-vercel-blob": "^3.85.0",
     "@payloadcms/ui": "^3.85.0",
-    "@vercel/blob": "^2.3.1",
+    "@vercel/blob": "2.6.1",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "cross-env": "^7.0.3",
