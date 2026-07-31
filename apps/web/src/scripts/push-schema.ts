@@ -60,32 +60,42 @@ async function prepareSeoColumnsForPush() {
         console.log(`OK: drop ${table}.${column} (si existía)`);
       }
 
-      // Enum Payload solo admite index|noindex. Datos viejos pueden tener
-      // "index, follow" u otros strings y rompen el ALTER TYPE de drizzle.
-      const hasRobots = await client.query<{ exists: boolean }>(
-        `SELECT EXISTS (
-           SELECT 1 FROM information_schema.columns
-           WHERE table_schema = 'public'
-             AND table_name = $1
-             AND column_name = 'seo_robots'
-         ) AS exists`,
+      // Enum Payload solo admite index|noindex. Datos viejos en varchar
+      // ("index, follow") rompen el ALTER TYPE; si ya es enum, no ILIKE.
+      const robotsCol = await client.query<{
+        data_type: string;
+        udt_name: string;
+      }>(
+        `SELECT data_type, udt_name
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = $1
+           AND column_name = 'seo_robots'`,
         [table],
       );
-      if (hasRobots.rows[0]?.exists) {
-        const result = await client.query(
-          `UPDATE "${table}"
-           SET seo_robots = CASE
-             WHEN seo_robots ILIKE '%noindex%' THEN 'noindex'
-             WHEN seo_robots IS NULL OR btrim(seo_robots) = '' THEN 'index'
-             ELSE 'index'
-           END
-           WHERE seo_robots IS DISTINCT FROM 'index'
-             AND seo_robots IS DISTINCT FROM 'noindex'`,
-        );
-        console.log(
-          `OK: normalize ${table}.seo_robots (${result.rowCount ?? 0} fila(s))`,
-        );
+      const robotsMeta = robotsCol.rows[0];
+      if (!robotsMeta) continue;
+
+      if (
+        robotsMeta.data_type === 'USER-DEFINED' ||
+        robotsMeta.udt_name.startsWith('enum_')
+      ) {
+        console.log(`OK: skip normalize ${table}.seo_robots (ya es enum)`);
+        continue;
       }
+
+      const result = await client.query(
+        `UPDATE "${table}"
+         SET seo_robots = CASE
+           WHEN seo_robots::text ILIKE '%noindex%' THEN 'noindex'
+           ELSE 'index'
+         END
+         WHERE seo_robots::text IS DISTINCT FROM 'index'
+           AND seo_robots::text IS DISTINCT FROM 'noindex'`,
+      );
+      console.log(
+        `OK: normalize ${table}.seo_robots (${result.rowCount ?? 0} fila(s))`,
+      );
     }
   } finally {
     await client.end();
