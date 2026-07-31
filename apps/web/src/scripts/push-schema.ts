@@ -6,8 +6,10 @@
  * NODE_ENV !== 'production'. En el build de Vercel NODE_ENV=production,
  * así que forzamos development solo para este script.
  *
- * Antes del push, elimina columnas SEO obsoletas (Twitter / canonical / JSON-LD editable)
- * para que drizzle-kit no pregunte de forma interactiva "create or rename" (rompe CI).
+ * Antes del push:
+ * - elimina columnas SEO obsoletas (Twitter / canonical / JSON-LD editable)
+ *   para que drizzle-kit no pregunte "create or rename" (rompe CI).
+ * - normaliza seo_robots a index|noindex (evita fallo de CAST a enum).
  */
 if (process.env.PAYLOAD_DB_PUSH !== 'true') {
   console.log('PAYLOAD_DB_PUSH != true — se omite push de esquema.');
@@ -43,7 +45,7 @@ const OBSOLETE_SEO_COLUMNS = [
   'seo_structured_data',
 ] as const;
 
-async function dropObsoleteSeoColumns() {
+async function prepareSeoColumnsForPush() {
   const client = new Client({
     connectionString: databaseUri,
     connectionTimeoutMillis: 15000,
@@ -57,14 +59,41 @@ async function dropObsoleteSeoColumns() {
         );
         console.log(`OK: drop ${table}.${column} (si existía)`);
       }
+
+      // Enum Payload solo admite index|noindex. Datos viejos pueden tener
+      // "index, follow" u otros strings y rompen el ALTER TYPE de drizzle.
+      const hasRobots = await client.query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = $1
+             AND column_name = 'seo_robots'
+         ) AS exists`,
+        [table],
+      );
+      if (hasRobots.rows[0]?.exists) {
+        const result = await client.query(
+          `UPDATE "${table}"
+           SET seo_robots = CASE
+             WHEN seo_robots ILIKE '%noindex%' THEN 'noindex'
+             WHEN seo_robots IS NULL OR btrim(seo_robots) = '' THEN 'index'
+             ELSE 'index'
+           END
+           WHERE seo_robots IS DISTINCT FROM 'index'
+             AND seo_robots IS DISTINCT FROM 'noindex'`,
+        );
+        console.log(
+          `OK: normalize ${table}.seo_robots (${result.rowCount ?? 0} fila(s))`,
+        );
+      }
     }
   } finally {
     await client.end();
   }
 }
 
-console.log('Eliminando columnas SEO obsoletas (anti-prompt drizzle)…');
-await dropObsoleteSeoColumns();
+console.log('Preparando columnas SEO (drop obsoletas + normalize robots)…');
+await prepareSeoColumnsForPush();
 
 const { getPayload } = await import('payload');
 const config = (await import('@/payload.config')).default;
