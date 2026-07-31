@@ -91,6 +91,11 @@ export function SeoGooglePreview(props: {
 
   return (
     <div className="field-type seo-google-preview">
+      <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--theme-elevation-700)', lineHeight: 1.45 }}>
+        <strong>Qué es:</strong> simulación de cómo se verá el resultado en Google.
+        <br />
+        <strong>Ejemplo:</strong> título azul + URL + descripción (como en la SERP).
+      </p>
       <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--theme-elevation-600)' }}>
         Vista previa de Google · Title ES: {countLabel(values.titleEs.length, 50, 60)} · Description
         ES: {countLabel(values.descEs.length, 140, 160)}

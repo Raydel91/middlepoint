@@ -16,8 +16,12 @@ export function SeoStructuredDataNote() {
     >
       <strong>Structured Data (JSON-LD)</strong>
       <p style={{ margin: '8px 0 0' }}>
-        Se genera automáticamente con Schema.org (Product o CollectionPage). No requiere edición
-        manual.
+        <strong>Qué es:</strong> datos estructurados Schema.org para que Google entienda el producto o
+        la categoría (rich results).
+      </p>
+      <p style={{ margin: '8px 0 0' }}>
+        <strong>Ejemplo:</strong> se genera solo como tipo <code>Product</code> o{' '}
+        <code>CollectionPage</code>. No hace falta pegar JSON manualmente.
       </p>
     </div>
   )

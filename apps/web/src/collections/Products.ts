@@ -5,10 +5,10 @@ import {
   isAdminRole,
   isMarketingRole,
 } from '@middlepoint/shared';
-import { updateAllowMarketing, updateUnlessMarketing } from '../fields/access';
-import { seoGroup, seoTabUiFields } from '../fields/seo';
+import { seoGroup, seoSlugField, seoTabUiFields } from '../fields/seo';
 import { socialGroup } from '../fields/social';
 import { restrictMarketingCatalogUpdate } from '../lib/marketing-catalog-guard';
+import { updateAllowMarketing, updateUnlessMarketing } from '../fields/access';
 
 const i18nField = (
   name: string,
@@ -176,18 +176,7 @@ export const Products: CollectionConfig = {
         {
           label: 'SEO',
           fields: [
-            {
-              name: 'slug',
-              type: 'text',
-              required: true,
-              unique: true,
-              index: true,
-              access: { update: updateUnlessMarketing },
-              admin: {
-                description:
-                  'Ej: green-detox → /es/productos/green-detox (marketing no puede cambiarlo).',
-              },
-            },
+            seoSlugField('product'),
             seoGroup,
             ...seoTabUiFields('product'),
           ],
