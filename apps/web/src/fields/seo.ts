@@ -176,10 +176,7 @@ export function seoTabUiFields(pathKind: 'product' | 'category'): Field[] {
       type: 'ui',
       label: 'Vista previa de Google',
       admin: {
-        description: [
-          'Qué es: simulación de cómo se vería el resultado en Google mientras editas Meta Title y Meta Description.',
-          'Ejemplo: título azul + URL verde + descripción gris (como en la SERP).',
-        ].join(' '),
+        // UI fields no admiten admin.description; el texto va en el componente.
         components: {
           Field: '@/components/payload/SeoGooglePreview#SeoGooglePreview',
         },
@@ -191,10 +188,6 @@ export function seoTabUiFields(pathKind: 'product' | 'category'): Field[] {
       type: 'ui',
       label: 'Structured Data (JSON-LD)',
       admin: {
-        description: [
-          'Qué es: datos estructurados Schema.org para Google (Product o CollectionPage).',
-          'Ejemplo: se genera solo; no hay que pegar JSON manualmente.',
-        ].join(' '),
         components: {
           Field: '@/components/payload/SeoStructuredDataNote#SeoStructuredDataNote',
         },
