@@ -3,7 +3,9 @@
 Monorepo npm workspaces: la app Next.js + Payload vive en `apps/web`.
 
 Repo: https://github.com/Raydel91/middlepoint  
-URL actual: **https://middlepointrd.vercel.app**
+URL actual: **https://middlepointrd.vercel.app**  
+Dominio propio (Hostinger): ver [hostinger.md](./hostinger.md)  
+Visión general del proyecto: [proyecto.md](./proyecto.md)
 
 ## 1. Base de datos (obligatorio)
 

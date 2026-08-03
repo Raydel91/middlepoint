@@ -1,13 +1,20 @@
 # MiddlePoint
 
-E-commerce wellness + logística — República Dominicana
+E-commerce wellness + logística — República Dominicana.
+
+- **Repo:** https://github.com/Raydel91/middlepoint  
+- **Demo (Vercel):** https://middlepointrd.vercel.app  
+- **Dominio objetivo:** https://middlepointrd.com  
+
+Documentación completa: **[docs/proyecto.md](docs/proyecto.md)**
 
 ## Stack
 
 - **Frontend**: Next.js 15 App Router, Tailwind CSS 4, next-intl
 - **Backend**: Payload CMS 3, PostgreSQL
 - **Auth**: Auth.js, JWT + refresh tokens, bcrypt, CSRF, rate limiting
-- **Monorepo**: npm workspaces
+- **Media (prod)**: Vercel Blob
+- **Monorepo**: npm workspaces (`apps/web`, `packages/shared`)
 
 ## Inicio rápido
 
@@ -28,10 +35,12 @@ npm run dev
 npm run seed
 ```
 
-App: http://localhost:3000/es  
-Admin Payload: http://localhost:3000/admin
+| URL | Destino |
+|-----|---------|
+| http://localhost:3000/es | Tienda |
+| http://localhost:3000/admin | Admin Payload |
 
-## Cuentas demo
+## Cuentas demo (seed)
 
 | Email | Password | Rol |
 |-------|----------|-----|
@@ -45,8 +54,9 @@ Admin Payload: http://localhost:3000/admin
 MiddlePoint/
 ├── apps/web/          # Next.js + Payload CMS
 ├── packages/shared/   # Types, RBAC, i18n utils
+├── docs/              # Documentación y guías de despliegue
 ├── brand.json         # Identidad visual
-└── docker-compose.yml # PostgreSQL
+└── docker-compose.yml # PostgreSQL local
 ```
 
 ## Tests
@@ -55,6 +65,11 @@ MiddlePoint/
 npm test
 ```
 
-## Despliegue (Vercel)
+## Despliegue
 
-Guía paso a paso: [docs/vercel.md](docs/vercel.md) — root `apps/web`, PostgreSQL externo (Neon/Supabase), variables de entorno y notas sobre media en serverless.
+| Destino | Guía |
+|---------|------|
+| **Vercel** (actual) | [docs/vercel.md](docs/vercel.md) |
+| **Hostinger** + `middlepointrd.com` | [docs/hostinger.md](docs/hostinger.md) |
+
+Resumen Hostinger: no usar hosting WordPress/compartido; usar **VPS** (recomendado) o Web Apps Node.js, PostgreSQL externo o en el VPS, DNS del dominio a la IP del servidor, Nginx + SSL, y `BLOB_READ_WRITE_TOKEN` para imágenes.
